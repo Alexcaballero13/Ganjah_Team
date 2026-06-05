@@ -22,4 +22,10 @@ public class ReporteController {
     public List<JugadorReporteDTO> reporteMensual(@RequestParam int mes, @RequestParam int anio) {
         return reporteService.generarReporteMensual(mes, anio);
     }
+
+    @GetMapping("/ausentes-por-mes")
+    @Operation(summary = "Reporte de jugadores ausentes en el mes")
+    public List<String> reporteAusentes(@RequestParam int mes, @RequestParam int anio) {
+        return reporteService.generarReporteAusentesMensual(mes, anio);
+    }
 }

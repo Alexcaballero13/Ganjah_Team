@@ -5,6 +5,7 @@ import com.appganjah.backend.domain.model.MatchDay;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,5 +28,12 @@ public class MatchDayController {
     @Operation(summary = "Listar todos los MatchDays")
     public List<MatchDay> listar() {
         return matchDayService.obtenerTodos();
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Eliminar un MatchDay por ID")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        matchDayService.eliminarMatchDay(id);
+        return ResponseEntity.noContent().build();
     }
 }

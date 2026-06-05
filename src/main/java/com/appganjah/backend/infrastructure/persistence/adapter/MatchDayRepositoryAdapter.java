@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -28,5 +29,16 @@ public class MatchDayRepositoryAdapter implements MatchDayRepository {
         return jpaRepository.findAll().stream()
                 .map(e -> new MatchDay(e.getId(), e.getFechaPartido(), e.getJugadores()))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<MatchDay> findById(Long id) {
+        return jpaRepository.findById(id)
+                .map(e -> new MatchDay(e.getId(), e.getFechaPartido(), e.getJugadores()));
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        jpaRepository.deleteById(id);
     }
 }
