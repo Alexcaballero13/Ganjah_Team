@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -26,7 +27,7 @@ public class JugadorController {
 
     @PostMapping
     @Operation(summary = "Crear un nuevo jugador")
-    public Jugador crear(@RequestBody Jugador jugador) {
+    public Jugador crear(@Valid @RequestBody Jugador jugador) {
         return jugadorService.crearJugador(jugador);
     }
 
@@ -40,7 +41,7 @@ public class JugadorController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar un jugador")
-    public Jugador actualizar(@PathVariable Long id, @RequestBody Jugador jugador) {
+    public Jugador actualizar(@PathVariable Long id, @Valid @RequestBody Jugador jugador) {
         return jugadorService.actualizarJugador(id, jugador);
     }
 

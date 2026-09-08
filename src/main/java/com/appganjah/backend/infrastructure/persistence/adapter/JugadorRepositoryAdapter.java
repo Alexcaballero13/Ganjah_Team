@@ -19,21 +19,21 @@ public class JugadorRepositoryAdapter implements JugadorRepository {
 
     @Override
     public Jugador save(Jugador jugador) {
-        JugadorEntity entity = new JugadorEntity(jugador.getId(), jugador.getNombre(), jugador.getPosicion(), jugador.getNivel());
+        JugadorEntity entity = new JugadorEntity(jugador.getId(), jugador.getNombre(), jugador.getPosicion(), jugador.getNivelAtaque(), jugador.getNivelDefensa());
         JugadorEntity saved = jpaRepository.save(entity);
-        return new Jugador(saved.getId(), saved.getNombre(), saved.getPosicion(), saved.getNivel());
+        return new Jugador(saved.getId(), saved.getNombre(), saved.getPosicion(), saved.getNivelAtaque(), saved.getNivelDefensa());
     }
 
     @Override
     public Optional<Jugador> findById(Long id) {
         return jpaRepository.findById(id)
-                .map(e -> new Jugador(e.getId(), e.getNombre(), e.getPosicion(), e.getNivel()));
+                .map(e -> new Jugador(e.getId(), e.getNombre(), e.getPosicion(), e.getNivelAtaque(), e.getNivelDefensa()));
     }
 
     @Override
     public List<Jugador> findAll() {
         return jpaRepository.findAll().stream()
-                .map(e -> new Jugador(e.getId(), e.getNombre(), e.getPosicion(), e.getNivel()))
+                .map(e -> new Jugador(e.getId(), e.getNombre(), e.getPosicion(), e.getNivelAtaque(), e.getNivelDefensa()))
                 .collect(Collectors.toList());
     }
 

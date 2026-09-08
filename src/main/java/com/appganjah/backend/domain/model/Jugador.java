@@ -5,6 +5,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -13,5 +17,25 @@ public class Jugador {
     private Long id;
     private String nombre;
     private String posicion;
-    private Integer nivel; // 1, 2, 3
+
+    @NotNull
+    @Min(1)
+    @Max(5)
+    private Integer nivelAtaque; // 1 a 5
+
+    @NotNull
+    @Min(1)
+    @Max(5)
+    private Integer nivelDefensa; // 1 a 5
+
+    /**
+     * Nivel general del jugador: siempre se deriva del promedio de ataque y
+     * defensa. No se recibe del cliente ni se persiste en la base de datos.
+     */
+    public Double getNivelGeneral() {
+        if (nivelAtaque == null || nivelDefensa == null) {
+            return null;
+        }
+        return (nivelAtaque + nivelDefensa) / 2.0;
+    }
 }
