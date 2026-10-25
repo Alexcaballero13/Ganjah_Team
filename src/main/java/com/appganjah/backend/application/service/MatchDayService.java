@@ -30,4 +30,16 @@ public class MatchDayService {
     public void eliminarMatchDay(Long id) {
         matchDayRepository.deleteById(id);
     }
+
+    // Se puede llamar en cualquier momento después del partido (incluso días
+    // después); si ya tenía marcador, lo reemplaza. RatingService recalcula el
+    // historial completo cada vez que hace falta, así que no hay que "deshacer"
+    // nada del ajuste anterior.
+    public Optional<MatchDay> registrarMarcador(Long id, Integer golesLocal, Integer golesVisitante) {
+        return matchDayRepository.findById(id).map(matchDay -> {
+            matchDay.setGolesLocal(golesLocal);
+            matchDay.setGolesVisitante(golesVisitante);
+            return matchDayRepository.save(matchDay);
+        });
+    }
 }

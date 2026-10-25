@@ -21,20 +21,31 @@ public class JugadorRepositoryAdapter implements JugadorRepository {
     public Jugador save(Jugador jugador) {
         JugadorEntity entity = new JugadorEntity(jugador.getId(), jugador.getNombre(), jugador.getPosicion(), jugador.getNivelAtaque(), jugador.getNivelDefensa());
         JugadorEntity saved = jpaRepository.save(entity);
-        return new Jugador(saved.getId(), saved.getNombre(), saved.getPosicion(), saved.getNivelAtaque(), saved.getNivelDefensa());
+        return aDominio(saved);
     }
 
     @Override
     public Optional<Jugador> findById(Long id) {
-        return jpaRepository.findById(id)
-                .map(e -> new Jugador(e.getId(), e.getNombre(), e.getPosicion(), e.getNivelAtaque(), e.getNivelDefensa()));
+        return jpaRepository.findById(id).map(this::aDominio);
     }
 
     @Override
     public List<Jugador> findAll() {
         return jpaRepository.findAll().stream()
-                .map(e -> new Jugador(e.getId(), e.getNombre(), e.getPosicion(), e.getNivelAtaque(), e.getNivelDefensa()))
+                .map(this::aDominio)
                 .collect(Collectors.toList());
+    }
+
+    // nivelEfectivo no se mapea aquí a propósito: se calcula aparte (RatingService)
+    // a partir del historial de partidos, no vive en la tabla de jugadores.
+    private Jugador aDominio(JugadorEntity e) {
+        return Jugador.builder()
+                .id(e.getId())
+                .nombre(e.getNombre())
+                .posicion(e.getPosicion())
+                .nivelAtaque(e.getNivelAtaque())
+                .nivelDefensa(e.getNivelDefensa())
+                .build();
     }
 
     @Override

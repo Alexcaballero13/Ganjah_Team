@@ -23,6 +23,13 @@ public class MatchDayEntity {
     
     @ElementCollection
     @CollectionTable(name = "matchday_jugadores", joinColumns = @JoinColumn(name = "matchday_id"))
-    @Column(name = "nombre_jugador")
-    private List<String> jugadores;
+    private List<JugadorDePartidoEmbeddable> jugadores;
+
+    // Marcador final, nullable: se ingresa después desde el historial, cuando se
+    // conoce el resultado real. Los MatchDay existentes quedan en null.
+    @Column(name = "goles_local")
+    private Integer golesLocal;
+
+    @Column(name = "goles_visitante")
+    private Integer golesVisitante;
 }

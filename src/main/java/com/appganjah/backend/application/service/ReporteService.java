@@ -1,5 +1,6 @@
 package com.appganjah.backend.application.service;
 
+import com.appganjah.backend.domain.model.JugadorDePartido;
 import com.appganjah.backend.domain.model.MatchDay;
 import com.appganjah.backend.domain.repository.JugadorRepository;
 import com.appganjah.backend.domain.repository.MatchDayRepository;
@@ -25,6 +26,7 @@ public class ReporteService {
         Map<String, Long> conteoPartidos = matchDays.stream()
                 .filter(m -> m.getFechaPartido().getMonthValue() == mes && m.getFechaPartido().getYear() == anio)
                 .flatMap(m -> m.getJugadores().stream())
+                .map(JugadorDePartido::getNombre)
                 .collect(Collectors.groupingBy(nombre -> nombre, Collectors.counting()));
 
         return conteoPartidos.entrySet().stream()
@@ -40,6 +42,7 @@ public class ReporteService {
         Set<String> asistentes = matchDays.stream()
                 .filter(m -> m.getFechaPartido().getMonthValue() == mes && m.getFechaPartido().getYear() == anio)
                 .flatMap(m -> m.getJugadores().stream())
+                .map(JugadorDePartido::getNombre)
                 .collect(Collectors.toSet());
 
         // Todos los jugadores registrados en el sistema
