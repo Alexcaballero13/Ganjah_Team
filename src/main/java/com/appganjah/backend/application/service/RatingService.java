@@ -25,7 +25,9 @@ import java.util.stream.Collectors;
  *   según el nivel manual de los dos equipos (ganarle a un equipo mejor en el
  *   papel pesa más que ganarle a uno peor).
  * - Pesa más cuanto más contundente fue el marcador (un 7-6 casi no mueve
- *   nada; un 7-1 sí).
+ *   nada; un 7-1 sí). Excepción: si el equipo que ganó jugó con menos
+ *   jugadores que el rival, se trata como margen máximo sin importar el
+ *   marcador real (ganar en desventaja numérica tiene mérito extra).
  * - Pesa menos cuanto más viejo es el partido (vida media en días), para que
  *   el nivel refleje la forma actual y no se congele con resultados de hace
  *   mucho tiempo, sin que un partido "desaparezca" de golpe por antigüedad.
@@ -144,7 +146,16 @@ public class RatingService {
             resultadoLocal = 0.5;
         }
 
-        double factorMargen = Math.min(1.0, Math.abs(golesLocal - golesVisitante) / GOLES_PARA_MARGEN_MAXIMO);
+        // Mérito por jugar en desventaja numérica: si el equipo que ganó tenía
+        // menos jugadores que el rival, se trata como si el margen hubiera sido
+        // el máximo (una goleada entre equipos parejos en cantidad), aunque el
+        // marcador haya sido ajustado. Ganarle al rival siendo menos pesa más
+        // que la diferencia de goles en sí.
+        boolean localGanoConMenosJugadores = resultadoLocal == 1.0 && local.size() < visitante.size();
+        boolean visitanteGanoConMenosJugadores = resultadoLocal == 0.0 && visitante.size() < local.size();
+        double factorMargen = (localGanoConMenosJugadores || visitanteGanoConMenosJugadores)
+                ? 1.0
+                : Math.min(1.0, Math.abs(golesLocal - golesVisitante) / GOLES_PARA_MARGEN_MAXIMO);
 
         long diasTranscurridos = ChronoUnit.DAYS.between(partido.getFechaPartido(), LocalDateTime.now());
         double pesoAntiguedad = Math.pow(0.5, Math.max(0, diasTranscurridos) / VIDA_MEDIA_DIAS);

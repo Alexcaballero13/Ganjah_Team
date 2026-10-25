@@ -1,5 +1,6 @@
 package com.appganjah.backend.application.service;
 
+import com.appganjah.backend.domain.model.JugadorDePartido;
 import com.appganjah.backend.domain.model.MatchDay;
 import com.appganjah.backend.domain.repository.MatchDayRepository;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,16 @@ public class MatchDayService {
         return matchDayRepository.findById(id).map(matchDay -> {
             matchDay.setGolesLocal(golesLocal);
             matchDay.setGolesVisitante(golesVisitante);
+            return matchDayRepository.save(matchDay);
+        });
+    }
+
+    // Reemplaza el roster completo (equipo LOCAL/VISITANTE por jugador) de un
+    // MatchDay ya confirmado. Para corregir después del sorteo quién jugó
+    // realmente: alguien que se bajó a último momento, alguien que se sumó, etc.
+    public Optional<MatchDay> actualizarJugadores(Long id, List<JugadorDePartido> jugadores) {
+        return matchDayRepository.findById(id).map(matchDay -> {
+            matchDay.setJugadores(jugadores);
             return matchDayRepository.save(matchDay);
         });
     }

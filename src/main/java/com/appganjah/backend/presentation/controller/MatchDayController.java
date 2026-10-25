@@ -1,6 +1,7 @@
 package com.appganjah.backend.presentation.controller;
 
 import com.appganjah.backend.application.service.MatchDayService;
+import com.appganjah.backend.domain.model.JugadorDePartido;
 import com.appganjah.backend.domain.model.MatchDay;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
@@ -51,6 +53,25 @@ public class MatchDayController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PutMapping("/{id}/jugadores")
+    @Operation(summary = "Editar el roster (equipo LOCAL/VISITANTE) de un MatchDay ya confirmado")
+    public ResponseEntity<MatchDay> actualizarJugadores(@PathVariable Long id, @Valid @RequestBody JugadoresRequest body) {
+        // Un mismo nombre no puede estar dos veces (ni en el mismo equipo ni en
+        // equipos distintos): contaría partidos y aplicaría ajustes de rating
+        // opuestos sobre la misma persona.
+        long nombresDistintos = body.getJugadores().stream()
+                .map(JugadorDePartido::getNombre)
+                .distinct()
+                .count();
+        if (nombresDistintos != body.getJugadores().size()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        return matchDayService.actualizarJugadores(id, body.getJugadores())
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
@@ -62,5 +83,14 @@ public class MatchDayController {
         @NotNull
         @Min(0)
         private Integer golesVisitante;
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class JugadoresRequest {
+        @NotEmpty
+        @Valid
+        private List<JugadorDePartido> jugadores;
     }
 }
