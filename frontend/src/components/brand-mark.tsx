@@ -6,10 +6,10 @@ export function BrandMark({ compact = false }: { compact?: boolean }) {
     <Link href="/" className="brand-mark" aria-label="Ganjah Team, inicio">
       <Image
         className="brand-logo"
-        src="/ganjah-team-logo.png"
+        src="/ganjah-team-logo-extracted.png"
         alt=""
-        width={306}
-        height={274}
+        width={944}
+        height={1100}
         priority
         aria-hidden="true"
       />

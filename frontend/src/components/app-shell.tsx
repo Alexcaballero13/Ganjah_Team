@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
 import { Icon, type IconName } from "@/components/icons";
@@ -14,9 +14,21 @@ const navigation: Array<{ href: string; label: string; icon: IconName }> = [
   { href: "/estadisticas", label: "Estadísticas", icon: "chart" },
 ];
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({ children, username }: { children: React.ReactNode; username: string }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function logout() {
+    setLoggingOut(true);
+    try {
+      await fetch("/api/auth/session", { method: "DELETE" });
+    } finally {
+      router.replace("/ingreso");
+      router.refresh();
+    }
+  }
 
   return (
     <div className="app-shell">
@@ -53,9 +65,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-        <div className="sidebar-note">
+        <div className="sidebar-session">
           <span className="status-dot" aria-hidden="true" />
-          <div><strong>Entorno local</strong><span>H2 aislado</span></div>
+          <div><strong>{username}</strong><span>Sesión activa</span></div>
+          <button className="text-button" type="button" onClick={logout} disabled={loggingOut}>
+            {loggingOut ? "Saliendo…" : "Salir"}
+          </button>
         </div>
       </aside>
 

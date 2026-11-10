@@ -15,8 +15,8 @@ export const metadata: Metadata = {
   },
   description: "Organiza jugadores, MatchDays, alineaciones y resultados.",
   icons: {
-    icon: "/ganjah-team-logo.png",
-    apple: "/ganjah-team-logo.png",
+    icon: "/ganjah-team-logo-extracted.png",
+    apple: "/ganjah-team-logo-extracted.png",
   },
 };
 

@@ -13,6 +13,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -56,22 +59,32 @@ public class SecurityConfig {
     @Bean
     public UserDetailsService userDetailsService(
             @Value("${GANJAH_ADMIN_USER}") String adminUser,
+            @Value("${GANJAH_ADMIN_USER_ALT:}") String alternateAdminUser,
             @Value("${GANJAH_ADMIN_PASSWORD}") String adminPassword,
             @Value("${GANJAH_VIEWER_USER}") String viewerUser,
             @Value("${GANJAH_VIEWER_PASSWORD}") String viewerPassword,
             PasswordEncoder passwordEncoder) {
-        UserDetails admin = User.builder()
+        List<UserDetails> users = new ArrayList<>();
+        users.add(User.builder()
                 .username(adminUser)
                 .password(passwordEncoder.encode(adminPassword))
                 .roles("ADMIN")
-                .build();
+                .build());
 
-        UserDetails viewer = User.builder()
+        if (!alternateAdminUser.isBlank() && !alternateAdminUser.equals(adminUser)) {
+            users.add(User.builder()
+                    .username(alternateAdminUser)
+                    .password(passwordEncoder.encode(adminPassword))
+                    .roles("ADMIN")
+                    .build());
+        }
+
+        users.add(User.builder()
                 .username(viewerUser)
                 .password(passwordEncoder.encode(viewerPassword))
                 .roles("VIEWER")
-                .build();
+                .build());
 
-        return new InMemoryUserDetailsManager(admin, viewer);
+        return new InMemoryUserDetailsManager(users);
     }
 }

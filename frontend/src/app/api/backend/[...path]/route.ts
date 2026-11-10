@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAllowedBackendRequest } from "@/lib/proxy-policy";
+import { readSessionToken, SESSION_COOKIE } from "@/lib/auth-session";
 
 type RouteContext = { params: Promise<{ path: string[] }> };
 
@@ -11,16 +12,11 @@ async function forward(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ message: "Ruta no permitida." }, { status: 404 });
   }
 
-  const backendUrl = process.env.GANJAH_BACKEND_URL || "http://127.0.0.1:8080";
-  const username = process.env.GANJAH_BACKEND_USER;
-  const password = process.env.GANJAH_BACKEND_PASSWORD;
-
-  if (!username || !password) {
-    return NextResponse.json(
-      { message: "Faltan credenciales locales del backend en el servidor." },
-      { status: 503 },
-    );
+  const session = readSessionToken(request.cookies.get(SESSION_COOKIE)?.value);
+  if (!session) {
+    return NextResponse.json({ message: "Tu sesión expiró. Ingresa nuevamente." }, { status: 401 });
   }
+  const backendUrl = process.env.GANJAH_BACKEND_URL || "http://127.0.0.1:8080";
 
   const target = new URL(`${backendUrl.replace(/\/$/, "")}/${normalizedPath}`);
   request.nextUrl.searchParams.forEach((value, key) => {
@@ -37,7 +33,7 @@ async function forward(request: NextRequest, context: RouteContext) {
     const response = await fetch(target, {
       method: request.method,
       headers: {
-        Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`,
+        Authorization: `Basic ${Buffer.from(`${session.username}:${session.password}`).toString("base64")}`,
         "Content-Type": request.headers.get("content-type") || "application/json",
         Accept: "application/json",
       },

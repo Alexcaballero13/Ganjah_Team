@@ -10,6 +10,7 @@ backend/.gradle/
 backend/build/
 backend/build_output*.txt
 *.log
+.runtime/
 .idea/
 .vscode/
 Thumbs.db

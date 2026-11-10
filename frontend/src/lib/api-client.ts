@@ -29,6 +29,9 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
+    if (response.status === 401 && typeof window !== "undefined") {
+      window.location.replace("/ingreso?sesion=expirada");
+    }
     let message = `La operación falló (${response.status}).`;
     try {
       const body = (await response.json()) as { message?: string; error?: string };

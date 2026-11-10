@@ -22,6 +22,7 @@ Aplicación local unificada para gestionar jugadores, MatchDays, alineaciones, m
 cd backend
 $env:JAVA_HOME = "RUTA_AL_JDK_11_O_SUPERIOR"
 $env:GANJAH_ADMIN_USER = "USUARIO_LOCAL"
+$env:GANJAH_ADMIN_USER_ALT = "SEGUNDO_ADMIN_LOCAL"
 $env:GANJAH_ADMIN_PASSWORD = "CONTRASEÑA_LOCAL"
 $env:GANJAH_VIEWER_USER = "LECTOR_LOCAL"
 $env:GANJAH_VIEWER_PASSWORD = "CONTRASEÑA_LECTOR_LOCAL"
@@ -32,7 +33,7 @@ El backend queda disponible en `http://127.0.0.1:8080`.
 
 ### Terminal 2 — frontend
 
-Copiar `frontend/.env.local.example` como `frontend/.env.local` y completar las credenciales locales del backend. `GANJAH_BACKEND_USER` y `GANJAH_BACKEND_PASSWORD` deben coincidir con las variables de administrador anteriores. El archivo `.env.local` está ignorado por Git.
+Copiar `frontend/.env.local.example` como `frontend/.env.local`, conservar la URL local del backend y generar un secreto aleatorio de al menos 32 caracteres para `GANJAH_SESSION_SECRET`. El archivo `.env.local` está ignorado por Git.
 
 ```powershell
 cd frontend
@@ -42,7 +43,7 @@ npm run dev
 
 Abrir `http://127.0.0.1:3000`.
 
-Las credenciales Basic se usan únicamente en el servidor de Next.js para comunicarse con el backend. Nunca se envían al navegador ni deben utilizarse en un despliegue público sin una capa de autenticación real.
+El panel de ingreso valida las credenciales existentes directamente contra Spring Boot. La sesión se cifra con AES-256-GCM dentro de una cookie `HttpOnly`, expira a las ocho horas y conserva los permisos ADMIN o VIEWER definidos por el backend. No se incorporan contraseñas al código ni se exponen variables sensibles al navegador.
 
 ## Validación
 
