@@ -1,0 +1,59 @@
+package com.appganjah.backend.application.service;
+
+import com.appganjah.backend.domain.model.JugadorDePartido;
+import com.appganjah.backend.domain.model.MatchDay;
+import com.appganjah.backend.domain.model.RosterStatus;
+import com.appganjah.backend.domain.repository.MatchDayRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@RequiredArgsConstructor
+public class MatchDayService {
+
+    private final MatchDayRepository matchDayRepository;
+
+    public MatchDay registrarMatchDay(MatchDay matchDay) {
+        matchDay.setFechaPartido(java.time.LocalDateTime.now());
+        matchDay.setRosterStatus(RosterStatus.COMPLETO);
+        return matchDayRepository.save(matchDay);
+    }
+
+    public List<MatchDay> obtenerTodos() {
+        return matchDayRepository.findAll();
+    }
+
+    public Optional<MatchDay> obtenerPorId(Long id) {
+        return matchDayRepository.findById(id);
+    }
+
+    public void eliminarMatchDay(Long id) {
+        matchDayRepository.deleteById(id);
+    }
+
+    // Se puede llamar en cualquier momento después del partido (incluso días
+    // después); si ya tenía marcador, lo reemplaza. RatingService recalcula el
+    // historial completo cada vez que hace falta, así que no hay que "deshacer"
+    // nada del ajuste anterior.
+    public Optional<MatchDay> registrarMarcador(Long id, Integer golesLocal, Integer golesVisitante) {
+        return matchDayRepository.findById(id).map(matchDay -> {
+            matchDay.setGolesLocal(golesLocal);
+            matchDay.setGolesVisitante(golesVisitante);
+            return matchDayRepository.save(matchDay);
+        });
+    }
+
+    // Reemplaza el roster completo (equipo LOCAL/VISITANTE por jugador) de un
+    // MatchDay ya confirmado. Para corregir después del sorteo quién jugó
+    // realmente: alguien que se bajó a último momento, alguien que se sumó, etc.
+    public Optional<MatchDay> actualizarJugadores(Long id, List<JugadorDePartido> jugadores) {
+        return matchDayRepository.findById(id).map(matchDay -> {
+            matchDay.setJugadores(jugadores);
+            matchDay.setRosterStatus(RosterStatus.COMPLETO);
+            return matchDayRepository.save(matchDay);
+        });
+    }
+}

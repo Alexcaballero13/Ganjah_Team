@@ -1,18 +1,16 @@
-# Gradle files
-.gradle/
-build/
-
-# IDE files
-.idea/
-*.iml
-*.ipr
-*.iws
-out/
-
-# Log files
+frontend/node_modules/
+frontend/.next/
+frontend/.npm-cache/
+frontend/.env.local
+frontend/.env*.local
+**/.env
+**/.env.*
+!**/.env.example
+backend/.gradle/
+backend/build/
+backend/build_output*.txt
 *.log
-bin/
+.idea/
+.vscode/
+Thumbs.db
 
-# Temporary run/build files
-build_output.txt
-build_output_2.txt

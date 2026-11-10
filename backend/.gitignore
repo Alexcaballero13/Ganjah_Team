@@ -1,0 +1,18 @@
+# Gradle files
+.gradle/
+build/
+
+# IDE files
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Log files
+*.log
+bin/
+
+# Temporary run/build files
+build_output.txt
+build_output_2.txt
