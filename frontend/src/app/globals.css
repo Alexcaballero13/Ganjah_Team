@@ -30,7 +30,7 @@ svg { width: 1.1rem; height: 1.1rem; }
 .eyebrow { color: var(--electric-500); font: 600 .72rem/1 var(--font-mono); letter-spacing: .16em; text-transform: uppercase; }
 
 .brand-mark { display: inline-flex; align-items: center; gap: .7rem; }
-.brand-symbol { display: grid; place-items: center; width: 2.55rem; aspect-ratio: 1; color: var(--pitch-950); background: var(--electric-500); clip-path: polygon(12% 0,88% 0,100% 25%,82% 100%,18% 100%,0 25%); font: 700 1rem/1 var(--font-display); transform: skew(-4deg); }
+.brand-logo { width: 3.25rem; height: auto; object-fit: contain; filter: drop-shadow(0 6px 14px rgba(0,0,0,.32)); }
 .brand-name { font: 700 1.15rem/1 var(--font-display); letter-spacing: .06em; text-transform: uppercase; }
 
 .button { min-height: 2.75rem; display: inline-flex; align-items: center; justify-content: center; gap: .55rem; padding: .7rem 1rem; border: 1px solid var(--line); color: var(--chalk-50); background: transparent; font-weight: 750; cursor: pointer; transition: .18s ease; }

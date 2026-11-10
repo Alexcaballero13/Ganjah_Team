@@ -14,6 +14,10 @@ export const metadata: Metadata = {
     template: "%s · Ganjah Team",
   },
   description: "Organiza jugadores, MatchDays, alineaciones y resultados.",
+  icons: {
+    icon: "/ganjah-team-logo.png",
+    apple: "/ganjah-team-logo.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
