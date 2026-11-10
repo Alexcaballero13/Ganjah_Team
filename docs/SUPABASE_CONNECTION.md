@@ -17,9 +17,10 @@ secretos del proveedor donde se aloje Spring Boot:
 - `SPRING_DATASOURCE_PASSWORD`
 - credenciales internas `GANJAH_*` para la comunicación Next.js → Spring Boot.
 
-Para un backend persistente con IPv6 puede usarse la conexión directa. Para un
-host IPv4 se debe escoger el **Session pooler** mostrado por el panel de
-Supabase; su host y usuario no deben construirse manualmente.
+La cadena original verificada usa el **Transaction pooler** en el puerto 6543
+con `prepareThreshold=0`. El 2026-11-10 la nueva versión se inició contra esa
+cadena y recuperó 30 jugadores y 32 MatchDays. Para un backend persistente con
+IPv6 también puede evaluarse posteriormente la conexión directa.
 
 ## Compatibilidad verificada
 
