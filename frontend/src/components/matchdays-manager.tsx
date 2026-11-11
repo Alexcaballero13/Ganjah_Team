@@ -9,6 +9,17 @@ import { useAuth } from "@/components/auth-context";
 import { Spinner, StatusPanel } from "@/components/ui";
 import { FormationPitch } from "@/components/formation-pitch";
 import { TeamListImage } from "@/components/team-list-image";
+import { normalizePlayerPosition, playerPositionLabels, type PlayerPosition } from "@/lib/player-position";
+
+type RosterPositionFilter = "all" | PlayerPosition;
+
+const rosterPositionOptions: Array<{ value: RosterPositionFilter; label: string }> = [
+  { value: "all", label: "Todos" },
+  { value: "PORTERO", label: playerPositionLabels.PORTERO },
+  { value: "DEFENSA", label: playerPositionLabels.DEFENSA },
+  { value: "MEDIOCAMPISTA", label: playerPositionLabels.MEDIOCAMPISTA },
+  { value: "DELANTERO", label: playerPositionLabels.DELANTERO },
+];
 
 type Assignment = Record<string, Equipo | "">;
 
@@ -25,6 +36,7 @@ export function MatchdaysManager() {
   const [matches, setMatches] = useState<MatchDay[]>([]);
   const [assignments, setAssignments] = useState<Assignment>({});
   const [draftSelection, setDraftSelection] = useState<Record<string, boolean>>({});
+  const [rosterPositionFilter, setRosterPositionFilter] = useState<RosterPositionFilter>("all");
   const [editingRoster, setEditingRoster] = useState<number | null>(null);
   const [scores, setScores] = useState<Record<number, { local: string; visitor: string }>>({});
   const [loading, setLoading] = useState(true);
@@ -58,6 +70,10 @@ export function MatchdaysManager() {
   const draftedPlayers = useMemo(
     () => players.filter((player) => draftSelection[player.nombre]),
     [draftSelection, players],
+  );
+  const visibleRosterPlayers = useMemo(
+    () => players.filter((player) => rosterPositionFilter === "all" || normalizePlayerPosition(player.posicion) === rosterPositionFilter),
+    [players, rosterPositionFilter],
   );
   const localCount = selected.filter((player) => player.equipo === "LOCAL").length;
   const visitorCount = selected.filter((player) => player.equipo === "VISITANTE").length;
@@ -185,8 +201,25 @@ export function MatchdaysManager() {
         </div>
         {players.length ? (
           <form onSubmit={saveRoster}>
+            <div className="roster-position-filter" aria-label="Filtrar convocatoria por posición">
+              <span>Posición</span>
+              <div role="group" aria-label="Posiciones de jugadores">
+                {rosterPositionOptions.map((option) => (
+                  <button
+                    className={rosterPositionFilter === option.value ? "is-active" : ""}
+                    type="button"
+                    key={option.value}
+                    aria-pressed={rosterPositionFilter === option.value}
+                    onClick={() => setRosterPositionFilter(option.value)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <small>{visibleRosterPlayers.length} de {players.length} jugadores visibles</small>
+            </div>
             <div className="roster-list">
-              {players.map((player) => (
+              {visibleRosterPlayers.map((player) => (
                 <div className="roster-row" key={player.id}>
                   <div><strong>{player.nombre}</strong><span>{player.posicion}</span></div>
                   <div className="roster-controls">
