@@ -11,6 +11,7 @@ export const SESSION_COOKIE = "ganjah_session";
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8;
 
 export interface AuthSession {
+  sessionId: string;
   username: string;
   password: string;
   role: "ADMIN" | "VIEWER";
@@ -25,10 +26,16 @@ function sessionKey() {
   return createHash("sha256").update(secret).digest();
 }
 
-export function createSessionToken(username: string, password: string, role: AuthSession["role"]) {
+export function createSessionToken(
+  sessionId: string,
+  username: string,
+  password: string,
+  role: AuthSession["role"],
+) {
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", sessionKey(), iv);
   const payload: AuthSession = {
+    sessionId,
     username,
     password,
     role,
@@ -65,6 +72,8 @@ export function readSessionToken(token?: string): AuthSession | null {
     const session = JSON.parse(decrypted) as Partial<AuthSession>;
 
     if (
+      typeof session.sessionId !== "string" ||
+      !/^[a-f0-9-]{36}$/.test(session.sessionId) ||
       typeof session.username !== "string" ||
       typeof session.password !== "string" ||
       (session.role !== "ADMIN" && session.role !== "VIEWER") ||

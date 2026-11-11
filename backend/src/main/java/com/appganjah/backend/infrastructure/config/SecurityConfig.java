@@ -12,6 +12,7 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,15 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    private final LoginRateLimitFilter loginRateLimitFilter;
+    private final com.appganjah.backend.application.service.LoginRateLimitService loginRateLimits;
+
+    public SecurityConfig(LoginRateLimitFilter loginRateLimitFilter,
+                          com.appganjah.backend.application.service.LoginRateLimitService loginRateLimits) {
+        this.loginRateLimitFilter = loginRateLimitFilter;
+        this.loginRateLimits = loginRateLimits;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -32,9 +42,22 @@ public class SecurityConfig {
                 .antMatchers("/api/reportes/**").hasAnyRole("ADMIN", "VIEWER")
                 .anyRequest().authenticated()
             .and()
-            .headers().frameOptions().disable()
+            .headers().frameOptions().sameOrigin()
             .and()
-            .httpBasic();
+            .httpBasic()
+                .authenticationEntryPoint((request, response, exception) -> {
+                    Object fingerprint = request.getAttribute(LoginRateLimitFilter.FINGERPRINT_ATTRIBUTE);
+                    boolean originalRequest = request.getDispatcherType() == javax.servlet.DispatcherType.REQUEST;
+                    boolean alreadyRecorded = Boolean.TRUE.equals(
+                            request.getAttribute(LoginRateLimitFilter.FAILURE_RECORDED_ATTRIBUTE));
+                    if (originalRequest && !alreadyRecorded && fingerprint instanceof String) {
+                        request.setAttribute(LoginRateLimitFilter.FAILURE_RECORDED_ATTRIBUTE, Boolean.TRUE);
+                        loginRateLimits.registerFailure((String) fingerprint);
+                    }
+                    response.sendError(org.springframework.http.HttpStatus.UNAUTHORIZED.value(), "No autorizado");
+                })
+            .and()
+            .addFilterBefore(loginRateLimitFilter, BasicAuthenticationFilter.class);
 
         return http.build();
     }

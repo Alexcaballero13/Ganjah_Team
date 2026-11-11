@@ -19,6 +19,15 @@ exactas y 3 etiquetas históricas pendientes (`Amigo jose`, `Amigo rolo` y
 el estado remoto antes de una migración. `005_supabase_security_plan_NOT_APPLIED.sql`
 es un plan de mínimo privilegio y no debe ejecutarse sin revisión y autorización.
 
+Para un Preview independiente y vacío, el orden preparado es:
+
+1. `007_preprod_schema_NOT_APPLIED.sql`
+2. `008_preprod_synthetic_seed_NOT_APPLIED.sql`
+3. `009_preprod_validate.sql`
+
+El seed sólo se ejecuta cuando la base empieza por `ganjah_preview_` y contiene
+12 jugadores identificados como `PREVIEW TEST`; no copia datos deportivos reales.
+
 Los 505 vínculos detectados previamente en Supabase siguen siendo la fuente
 remota completa. Este repositorio no fabrica los 443 que no están íntegramente
 respaldados en la extracción local.

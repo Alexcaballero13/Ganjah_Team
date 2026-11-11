@@ -23,6 +23,9 @@ test("el proxy utiliza la sesión cifrada y no credenciales públicas", () => {
 
 test("el proxy aplica una lista explícita de endpoints y métodos", () => {
   assert.match(route, /isAllowedBackendRequest/);
+  assert.match(route, /isSameOrigin/);
+  assert.match(route, /new URL\(origin\)\.host === request\.headers\.get\("host"\)/);
+  assert.match(route, /Solicitud no autorizada/);
   assert.match(policy, /const rules:/);
   assert.ok(policy.includes("api\\/jugadores"));
   assert.ok(policy.includes("api\\/matchdays"));

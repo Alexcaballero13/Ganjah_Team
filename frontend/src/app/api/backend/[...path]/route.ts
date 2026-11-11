@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAllowedBackendRequest } from "@/lib/proxy-policy";
 import { readSessionToken, SESSION_COOKIE } from "@/lib/auth-session";
+import { isBackendSessionActive } from "@/lib/backend-session";
 
 type RouteContext = { params: Promise<{ path: string[] }> };
+
+function isSameOrigin(request: NextRequest) {
+  const origin = request.headers.get("origin");
+  if (!origin) return true;
+  try {
+    return new URL(origin).host === request.headers.get("host");
+  } catch {
+    return false;
+  }
+}
 
 async function forward(request: NextRequest, context: RouteContext) {
   const { path } = await context.params;
@@ -12,9 +23,16 @@ async function forward(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ message: "Ruta no permitida." }, { status: 404 });
   }
 
+  if (!["GET", "HEAD", "OPTIONS"].includes(request.method) && !isSameOrigin(request)) {
+    return NextResponse.json({ message: "Solicitud no autorizada." }, { status: 403 });
+  }
+
   const session = readSessionToken(request.cookies.get(SESSION_COOKIE)?.value);
   if (!session) {
     return NextResponse.json({ message: "Tu sesión expiró. Ingresa nuevamente." }, { status: 401 });
+  }
+  if (!(await isBackendSessionActive(session))) {
+    return NextResponse.json({ message: "Tu sesión fue invalidada. Ingresa nuevamente." }, { status: 401 });
   }
   const backendUrl = process.env.GANJAH_BACKEND_URL || "http://127.0.0.1:8080";
 

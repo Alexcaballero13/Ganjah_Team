@@ -20,14 +20,20 @@ export function AppShell({ children, username, role }: { children: React.ReactNo
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
 
   async function logout() {
     setLoggingOut(true);
     try {
-      await fetch("/api/auth/session", { method: "DELETE" });
-    } finally {
+      const response = await fetch("/api/auth/session", { method: "DELETE" });
+      if (!response.ok) {
+        setLogoutError("No fue posible cerrar la sesión de forma segura.");
+        return;
+      }
       router.replace("/ingreso");
       router.refresh();
+    } finally {
+      setLoggingOut(false);
     }
   }
 
@@ -73,6 +79,7 @@ export function AppShell({ children, username, role }: { children: React.ReactNo
           <button className="text-button" type="button" onClick={logout} disabled={loggingOut}>
             {loggingOut ? "Saliendo…" : "Salir"}
           </button>
+          {logoutError && <span role="alert">{logoutError}</span>}
         </div>
       </aside>
 

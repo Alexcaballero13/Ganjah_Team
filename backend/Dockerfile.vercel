@@ -1,0 +1,23 @@
+# Imagen de construcción: el proyecto actual usa Java 11.
+FROM gradle:8.5-jdk11 AS build
+
+WORKDIR /workspace
+COPY build.gradle settings.gradle ./
+RUN gradle --no-daemon dependencies
+COPY src ./src
+RUN gradle --no-daemon bootJar
+
+# Imagen de ejecución sin herramientas de compilación ni secretos.
+FROM eclipse-temurin:11-jre-jammy
+
+WORKDIR /app
+RUN groupadd --system ganjah && useradd --system --gid ganjah --home-dir /app ganjah
+COPY --from=build /workspace/build/libs/*.jar /app/app.jar
+RUN chown ganjah:ganjah /app/app.jar
+
+USER ganjah
+ENV PORT=8080
+EXPOSE 8080
+
+# Vercel inyecta PORT y las variables de producción en tiempo de ejecución.
+ENTRYPOINT ["sh", "-c", "exec java ${JAVA_TOOL_OPTIONS:-} -Dserver.port=${PORT:-8080} -jar /app/app.jar"]

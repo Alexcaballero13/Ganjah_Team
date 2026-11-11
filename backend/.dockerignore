@@ -1,0 +1,8 @@
+.gradle
+build
+.env
+.env.*
+*.log
+.git
+.gitignore
+README.md

@@ -3,8 +3,11 @@ import {
   createSessionToken,
   readSessionToken,
   SESSION_COOKIE,
+  SESSION_MAX_AGE_SECONDS,
   sessionCookieOptions,
 } from "@/lib/auth-session";
+import { createBackendSession, revokeBackendSession } from "@/lib/backend-session";
+import { randomUUID } from "node:crypto";
 
 function backendUrl() {
   return (process.env.GANJAH_BACKEND_URL || "http://127.0.0.1:8080").replace(/\/$/, "");
@@ -12,7 +15,12 @@ function backendUrl() {
 
 function isSameOrigin(request: NextRequest) {
   const origin = request.headers.get("origin");
-  return !origin || origin === request.nextUrl.origin;
+  if (!origin) return true;
+  try {
+    return new URL(origin).host === request.headers.get("host");
+  } catch {
+    return false;
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -56,10 +64,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "El servidor devolvió un perfil inválido." }, { status: 502 });
     }
 
+    const session = {
+      sessionId: randomUUID(),
+      username,
+      password,
+      role,
+      expiresAt: Date.now() + SESSION_MAX_AGE_SECONDS * 1000,
+    } as const;
+    if (!(await createBackendSession(session))) {
+      return NextResponse.json({ message: "No fue posible crear la sesión segura." }, { status: 502 });
+    }
+
     const response = NextResponse.json({ username, role });
     response.cookies.set(
       SESSION_COOKIE,
-      createSessionToken(username, password, role),
+      createSessionToken(session.sessionId, username, password, role),
       sessionCookieOptions(),
     );
     return response;
@@ -82,6 +101,10 @@ export async function GET(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   if (!isSameOrigin(request)) {
     return NextResponse.json({ message: "Solicitud no autorizada." }, { status: 403 });
+  }
+  const session = readSessionToken(request.cookies.get(SESSION_COOKIE)?.value);
+  if (session && !(await revokeBackendSession(session))) {
+    return NextResponse.json({ message: "No fue posible invalidar la sesión." }, { status: 502 });
   }
   const response = NextResponse.json({ authenticated: false });
   response.cookies.set(SESSION_COOKIE, "", {
