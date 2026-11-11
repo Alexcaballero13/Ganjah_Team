@@ -1,4 +1,5 @@
 import type { Jugador } from "@/lib/types";
+import { playerPositionKey } from "@/lib/player-position";
 
 export const MIN_DRAFT_PLAYERS = 12;
 export const MAX_DRAFT_PLAYERS = 18;
@@ -9,15 +10,6 @@ const POSITION_ORDER: Record<string, number> = {
   MEDIOCAMPISTA: 3,
   DELANTERO: 4,
 };
-
-function normalizedPosition(position: string) {
-  const value = position.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  if (["POR", "PORTERO", "ARQUERO"].includes(value)) return "PORTERO";
-  if (["DEF", "DEFENSA"].includes(value)) return "DEFENSA";
-  if (["MED", "MEDIO", "MEDIOCENTRO", "MEDIOCAMPISTA"].includes(value)) return "MEDIOCAMPISTA";
-  if (["DEL", "DELANTERO", "ATACANTE"].includes(value)) return "DELANTERO";
-  return value || "SIN_POSICION";
-}
 
 function manualLevel(player: Jugador) {
   return typeof player.nivelGeneral === "number"
@@ -57,7 +49,7 @@ export function balanceTeams(players: Jugador[], random: () => number = Math.ran
   const shuffled = shuffle([...players], random);
   const positionTotals = new Map<string, number>();
   shuffled.forEach((player) => {
-    const position = normalizedPosition(player.posicion);
+    const position = playerPositionKey(player.posicion);
     positionTotals.set(position, (positionTotals.get(position) || 0) + 1);
   });
 
@@ -102,7 +94,7 @@ export function balanceTeams(players: Jugador[], random: () => number = Math.ran
     }
 
     const player = shuffled[index];
-    const position = normalizedPosition(player.posicion);
+    const position = playerPositionKey(player.posicion);
     const maxPosition = Math.ceil((positionTotals.get(position) || 0) / 2);
     const adjustment = effectiveAdjustment(player);
     const weightedAttack = player.nivelAtaque + adjustment;
@@ -131,8 +123,8 @@ export function balanceTeams(players: Jugador[], random: () => number = Math.ran
   }
 
   const sortTeam = (team: Jugador[]) => team.sort((a, b) => {
-    const positionDifference = (POSITION_ORDER[normalizedPosition(a.posicion)] || 99) -
-      (POSITION_ORDER[normalizedPosition(b.posicion)] || 99);
+    const positionDifference = (POSITION_ORDER[playerPositionKey(a.posicion)] || 99) -
+      (POSITION_ORDER[playerPositionKey(b.posicion)] || 99);
     return positionDifference || manualLevel(b) - manualLevel(a);
   });
 

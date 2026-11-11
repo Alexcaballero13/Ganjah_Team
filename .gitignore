@@ -6,6 +6,7 @@ frontend/.env*.local
 **/.env
 **/.env.*
 !**/.env.example
+!frontend/.env.local.example
 backend/.gradle/
 backend/build/
 backend/build_output*.txt

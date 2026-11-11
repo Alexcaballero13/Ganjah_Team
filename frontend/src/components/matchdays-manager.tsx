@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/format";
 import type { Equipo, Jugador, JugadorDePartido, MatchDay } from "@/lib/types";
 import { useAuth } from "@/components/auth-context";
 import { Spinner, StatusPanel } from "@/components/ui";
+import { FormationPitch } from "@/components/formation-pitch";
 
 type Assignment = Record<string, Equipo | "">;
 
@@ -59,6 +60,10 @@ export function MatchdaysManager() {
   );
   const localCount = selected.filter((player) => player.equipo === "LOCAL").length;
   const visitorCount = selected.filter((player) => player.equipo === "VISITANTE").length;
+  const formationTeams = useMemo(() => ({
+    local: players.filter((player) => assignments[player.nombre] === "LOCAL"),
+    visitante: players.filter((player) => assignments[player.nombre] === "VISITANTE"),
+  }), [assignments, players]);
   const setTeam = (name: string, team: Equipo | "") => {
     setAssignments((current) => ({ ...current, [name]: team }));
     if (team) setDraftSelection((current) => ({ ...current, [name]: true }));
@@ -198,6 +203,9 @@ export function MatchdaysManager() {
           </form>
         ) : loading ? <Spinner label="Cargando plantilla" /> : <StatusPanel title="Primero crea jugadores" message="Un MatchDay necesita jugadores registrados en la plantilla." />}
       </section>
+      {selected.length === draftedPlayers.length && localCount > 0 && visitorCount > 0 && (
+        <FormationPitch local={formationTeams.local} visitante={formationTeams.visitante} />
+      )}
       {loading ? <div className="content-loading"><Spinner label="Cargando historial" /></div> : matches.length ? (
         <section className="match-list" aria-label="Historial de MatchDays">
           {matches.map((match) => {

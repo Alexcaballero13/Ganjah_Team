@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { displayLevel } from "@/lib/format";
 import { getPlayerRating, getPlayerTier, playerTierLabels } from "@/lib/player-tier";
+import { normalizePlayerPosition } from "@/lib/player-position";
 import type { Equipo, Jugador } from "@/lib/types";
 
 function StarRating({ label, value }: { label: string; value: number }) {
@@ -37,36 +38,15 @@ type PositionSilhouette = {
 };
 
 const positionSilhouettes: Record<string, PositionSilhouette> = {
-  DEL: { src: "/player-forward-silhouette.png", label: "delantero", className: "position-forward", width: 1153, height: 1364 },
   DELANTERO: { src: "/player-forward-silhouette.png", label: "delantero", className: "position-forward", width: 1153, height: 1364 },
-  ATACANTE: { src: "/player-forward-silhouette.png", label: "delantero", className: "position-forward", width: 1153, height: 1364 },
-  FORWARD: { src: "/player-forward-silhouette.png", label: "delantero", className: "position-forward", width: 1153, height: 1364 },
-  MED: { src: "/player-midfielder-silhouette.png", label: "mediocampista", className: "position-midfielder", width: 1254, height: 1254 },
-  MEDIO: { src: "/player-midfielder-silhouette.png", label: "mediocampista", className: "position-midfielder", width: 1254, height: 1254 },
   MEDIOCAMPISTA: { src: "/player-midfielder-silhouette.png", label: "mediocampista", className: "position-midfielder", width: 1254, height: 1254 },
-  MEDIOCENTRO: { src: "/player-midfielder-silhouette.png", label: "mediocampista", className: "position-midfielder", width: 1254, height: 1254 },
-  VOLANTE: { src: "/player-midfielder-silhouette.png", label: "mediocampista", className: "position-midfielder", width: 1254, height: 1254 },
-  MIDFIELDER: { src: "/player-midfielder-silhouette.png", label: "mediocampista", className: "position-midfielder", width: 1254, height: 1254 },
-  POR: { src: "/player-goalkeeper-silhouette.png", label: "portero", className: "position-goalkeeper", width: 1536, height: 1024 },
   PORTERO: { src: "/player-goalkeeper-silhouette.png", label: "portero", className: "position-goalkeeper", width: 1536, height: 1024 },
-  ARQUERO: { src: "/player-goalkeeper-silhouette.png", label: "portero", className: "position-goalkeeper", width: 1536, height: 1024 },
-  GUARDAMETA: { src: "/player-goalkeeper-silhouette.png", label: "portero", className: "position-goalkeeper", width: 1536, height: 1024 },
-  GOALKEEPER: { src: "/player-goalkeeper-silhouette.png", label: "portero", className: "position-goalkeeper", width: 1536, height: 1024 },
-  DEF: { src: "/player-defender-silhouette.png", label: "defensa", className: "position-defender", width: 1536, height: 1024 },
   DEFENSA: { src: "/player-defender-silhouette.png", label: "defensa", className: "position-defender", width: 1536, height: 1024 },
-  DEFENSOR: { src: "/player-defender-silhouette.png", label: "defensa", className: "position-defender", width: 1536, height: 1024 },
-  ZAGUERO: { src: "/player-defender-silhouette.png", label: "defensa", className: "position-defender", width: 1536, height: 1024 },
-  DEFENDER: { src: "/player-defender-silhouette.png", label: "defensa", className: "position-defender", width: 1536, height: 1024 },
 };
 
 export function getPositionSilhouette(position?: string) {
-  const normalized = position
-    ?.normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[\s_-]+/g, "")
-    .toUpperCase() ?? "";
-
-  return positionSilhouettes[normalized];
+  const normalized = normalizePlayerPosition(position);
+  return normalized ? positionSilhouettes[normalized] : undefined;
 }
 
 function PlayerAvatar({ player }: { player: Jugador }) {
