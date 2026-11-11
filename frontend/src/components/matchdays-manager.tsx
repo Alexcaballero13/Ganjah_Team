@@ -8,6 +8,7 @@ import type { Equipo, Jugador, JugadorDePartido, MatchDay } from "@/lib/types";
 import { useAuth } from "@/components/auth-context";
 import { Spinner, StatusPanel } from "@/components/ui";
 import { FormationPitch } from "@/components/formation-pitch";
+import { TeamListImage } from "@/components/team-list-image";
 
 type Assignment = Record<string, Equipo | "">;
 
@@ -204,7 +205,14 @@ export function MatchdaysManager() {
         ) : loading ? <Spinner label="Cargando plantilla" /> : <StatusPanel title="Primero crea jugadores" message="Un MatchDay necesita jugadores registrados en la plantilla." />}
       </section>
       {selected.length === draftedPlayers.length && localCount > 0 && visitorCount > 0 && (
-        <FormationPitch local={formationTeams.local} visitante={formationTeams.visitante} />
+        <>
+          <FormationPitch local={formationTeams.local} visitante={formationTeams.visitante} />
+          <TeamListImage
+            key={`${formationTeams.local.map((player) => player.id).join("-")}:${formationTeams.visitante.map((player) => player.id).join("-")}`}
+            local={formationTeams.local}
+            visitante={formationTeams.visitante}
+          />
+        </>
       )}
       {loading ? <div className="content-loading"><Spinner label="Cargando historial" /></div> : matches.length ? (
         <section className="match-list" aria-label="Historial de MatchDays">

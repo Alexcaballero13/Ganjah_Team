@@ -41,6 +41,7 @@ npm run build
 - Jugadores: filtros combinables por categoría visual y las cuatro posiciones; el contador y la lista se actualizan sin recarga.
 - Edición: ADMIN abre un diálogo contextual desde cualquier tarjeta. Escape/Cancelar descartan; el diálogo sólo se cierra tras confirmarse el guardado. VIEWER continúa en lectura.
 - Sorteo: conserva `balanceTeams`; después calcula una formación determinista por las posiciones actuales. No cambia equipos, no persiste coordenadas y advierte equipos sin portero o con varios.
+- Lista compartible: después de equilibrar, el navegador genera un PNG vertical con LOCAL/VISITANTE, nombres y posiciones, sin mostrar niveles deportivos. Se puede descargar o compartir desde el dispositivo y no se persiste en backend ni PostgreSQL.
 - Históricos: la nueva vista previa vive en el constructor actual; los 32 MatchDays recuperados no se reescriben.
 
 ## Base de datos
