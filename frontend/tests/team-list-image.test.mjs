@@ -14,6 +14,19 @@ test("la imagen lista utiliza los equipos equilibrados actuales sin persistir da
   assert.doesNotMatch(source, /localStorage|sessionStorage/);
 });
 
+test("la imagen también está disponible para MatchDays confirmados", () => {
+  assert.match(manager, /match\.rosterStatus !== "DESCONOCIDO"/);
+  assert.match(manager, /matchDate=\{match\.fechaPartido\}/);
+  assert.match(manager, /matchLabel=\{matchLabel\}/);
+  assert.match(manager, /historical/);
+  assert.match(source, /Partido confirmado/);
+  assert.match(source, /Generar lista/);
+  assert.match(source, /role="dialog"/);
+  assert.match(source, /Descargar PNG/);
+  assert.match(source, /Compartir imagen/);
+  assert.match(source, /createTeamListPng\(local, visitante, \{ matchDate, matchLabel \}\)/);
+});
+
 test("la lista conserva nombres y posiciones sin exponer niveles", () => {
   assert.match(source, /player\.nombre\.toUpperCase/);
   assert.match(source, /normalizePlayerPosition\(player\.posicion\)/);

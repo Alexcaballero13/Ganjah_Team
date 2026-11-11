@@ -219,6 +219,16 @@ export function MatchdaysManager() {
           {matches.map((match) => {
             const local = match.jugadores.filter((player) => player.equipo === "LOCAL");
             const visitor = match.jugadores.filter((player) => player.equipo === "VISITANTE");
+            const resolveConfirmedPlayer = (entry: JugadorDePartido, index: number): Jugador => players.find((player) => player.nombre === entry.nombre) || {
+              id: -(match.id * 100 + index + 1),
+              nombre: entry.nombre,
+              posicion: "Sin posición verificada",
+              nivelAtaque: 0,
+              nivelDefensa: 0,
+            };
+            const confirmedLocal = local.map(resolveConfirmedPlayer);
+            const confirmedVisitor = visitor.map((entry, index) => resolveConfirmedPlayer(entry, local.length + index));
+            const matchLabel = `MatchDay #${match.legacySequence ?? match.id}`;
             return (
               <article className="match-card" key={match.id}>
                 <div className="match-meta"><span className="eyebrow">MatchDay #{match.legacySequence ?? match.id}</span><time dateTime={match.fechaPartido}>{formatDate(match.fechaPartido)}</time></div>
@@ -230,7 +240,10 @@ export function MatchdaysManager() {
                   </div>
                   <div><b>Visitante</b><strong>{match.rosterStatus === "DESCONOCIDO" ? "—" : visitor.length}</strong><span>{match.rosterStatus === "DESCONOCIDO" ? "Plantilla no recuperada" : visitor.map((player) => player.nombre).join(" · ")}</span></div>
                 </div>
-                {!match.readOnlySnapshot && canWrite && <div className="card-actions"><button className="button button-small" type="button" onClick={() => editRoster(match)}>Editar equipos</button><button className="button button-small button-danger-ghost" type="button" onClick={() => remove(match)}>Eliminar</button></div>}
+                {((!match.readOnlySnapshot && canWrite) || (match.rosterStatus !== "DESCONOCIDO" && match.jugadores.length > 0)) && <div className="card-actions">
+                  {!match.readOnlySnapshot && canWrite && <><button className="button button-small" type="button" onClick={() => editRoster(match)}>Editar equipos</button><button className="button button-small button-danger-ghost" type="button" onClick={() => remove(match)}>Eliminar</button></>}
+                  {match.rosterStatus !== "DESCONOCIDO" && match.jugadores.length > 0 && <TeamListImage local={confirmedLocal} visitante={confirmedVisitor} matchDate={match.fechaPartido} matchLabel={matchLabel} historical />}
+                </div>}
               </article>
             );
           })}
