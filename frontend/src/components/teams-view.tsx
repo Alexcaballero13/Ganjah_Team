@@ -6,15 +6,7 @@ import { formatDate } from "@/lib/format";
 import type { Equipo, Jugador, MatchDay } from "@/lib/types";
 import { PlayerCard } from "@/components/player-card";
 import { Spinner, StatusPanel } from "@/components/ui";
-
-function positionWeight(position: string) {
-  const normalized = position.toLowerCase();
-  if (/portero|arquero|guardameta/.test(normalized)) return 0;
-  if (/defensa|central|lateral/.test(normalized)) return 1;
-  if (/medio|volante/.test(normalized)) return 2;
-  if (/delantero|atacante|extremo/.test(normalized)) return 3;
-  return 2;
-}
+import { calculateFormation } from "@/lib/formation-layout";
 
 export function TeamsView() {
   const [matches, setMatches] = useState<MatchDay[]>([]);
@@ -51,26 +43,47 @@ export function TeamsView() {
     <div className="manager-stack">
       <label className="match-selector"><span>Encuentro</span><select value={selected.id} onChange={(event) => setSelectedId(Number(event.target.value))}>{matches.map((match) => <option key={match.id} value={match.id}>{formatDate(match.fechaPartido)} · MatchDay #{match.legacySequence ?? match.id}</option>)}</select></label>
       {selected.rosterStatus === "DESCONOCIDO" && <StatusPanel title="Alineación histórica pendiente" message="El sistema original conserva este MatchDay, pero no expuso los nombres de sus equipos. No se presenta como una alineación vacía ni se inventan jugadores." />}
-      <div className="tactical-board" aria-label={`Campo del MatchDay ${selected.legacySequence ?? selected.id}`}>
-        <div className="field-markings" aria-hidden="true"><i /><i /><i /></div>
-        {selected.rosterStatus !== "DESCONOCIDO" && teams.map((team) => {
-          const roster = selected.jugadores
-            .filter((entry) => entry.equipo === team)
-            .map((entry) => resolvePlayer(entry.nombre))
-            .sort((a, b) => positionWeight(a.posicion) - positionWeight(b.posicion));
-          return <TeamHalf key={team} team={team} players={roster} />;
-        })}
+      <div className="tactical-board-scroll" tabIndex={0} aria-label="Desplazar cancha horizontalmente">
+        <div className="tactical-board" aria-label={`Campo del MatchDay ${selected.legacySequence ?? selected.id}`}>
+          <div className="field-markings" aria-hidden="true"><i /><i /><i /></div>
+          {selected.rosterStatus !== "DESCONOCIDO" && teams.map((team) => {
+            const roster = selected.jugadores
+              .filter((entry) => entry.equipo === team)
+              .map((entry) => resolvePlayer(entry.nombre));
+            return <TeamFormation key={team} team={team} players={roster} />;
+          })}
+        </div>
       </div>
       <p className="field-note">La distribución ordena las posiciones reales de portería a ataque. El backend aún no almacena coordenadas tácticas ni dorsales.</p>
     </div>
   );
 }
 
-function TeamHalf({ team, players }: { team: Equipo; players: Jugador[] }) {
+function TeamFormation({ team, players }: { team: Equipo; players: Jugador[] }) {
+  // La vista Equipos conserva LOCAL arriba y VISITANTE abajo, como la versión
+  // aprobada. calculateFormation aporta líneas estables por posición; aquí sólo
+  // invertimos el eje vertical de presentación y protegemos los bordes.
+  const spots = calculateFormation(players, team).map((spot) => ({
+    ...spot,
+    y: Math.min(92, Math.max(8,
+      spot.position === "DELANTERO"
+        ? team === "LOCAL" ? 43 : 57
+        : 100 - spot.y,
+    )),
+  }));
+
   return (
-    <section className={`team-half half-${team.toLowerCase()}`} aria-label={`Equipo ${team === "LOCAL" ? "local" : "visitante"}`}>
+    <section className={`tactical-team tactical-team-${team.toLowerCase()}`} aria-label={`Equipo ${team === "LOCAL" ? "local" : "visitante"}`}>
       <header><strong>{team === "LOCAL" ? "Local" : "Visitante"}</strong><span>{players.length} jugadores</span></header>
-      <div className="field-roster">{players.map((player) => <PlayerCard key={`${team}-${player.nombre}`} player={player} team={team} compact classificationAvailable={player.id !== -1} />)}</div>
+      {spots.map((spot) => (
+        <div
+          className="team-formation-player"
+          key={`${team}-${spot.player.id}-${spot.player.nombre}`}
+          style={{ left: `${spot.x}%`, top: `${spot.y}%` }}
+        >
+          <PlayerCard player={spot.player} team={team} compact classificationAvailable={spot.player.id !== -1} />
+        </div>
+      ))}
     </section>
   );
 }
