@@ -14,6 +14,10 @@ test("el proxy utiliza la sesión cifrada y no credenciales públicas", () => {
   assert.match(session, /aes-256-gcm/);
   assert.match(session, /httpOnly:\s*true/);
   assert.match(session, /sameSite:\s*"lax"/);
+  assert.match(session, /secure:\s*process\.env\.NODE_ENV === "production"/);
+  assert.match(session, /SESSION_MAX_AGE_SECONDS = 60 \* 60 \* 8/);
+  assert.match(session, /session\.expiresAt <= Date\.now\(\)/);
+  assert.match(sessionRoute, /api\/auth\/me/);
   assert.match(sessionRoute, /Usuario o contraseña incorrectos/);
 });
 

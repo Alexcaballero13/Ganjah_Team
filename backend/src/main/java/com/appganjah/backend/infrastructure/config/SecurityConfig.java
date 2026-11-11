@@ -61,6 +61,7 @@ public class SecurityConfig {
             @Value("${GANJAH_ADMIN_USER}") String adminUser,
             @Value("${GANJAH_ADMIN_USER_ALT:}") String alternateAdminUser,
             @Value("${GANJAH_ADMIN_PASSWORD}") String adminPassword,
+            @Value("${GANJAH_ADMIN_PASSWORD_ALT:}") String alternateAdminPassword,
             @Value("${GANJAH_VIEWER_USER}") String viewerUser,
             @Value("${GANJAH_VIEWER_PASSWORD}") String viewerPassword,
             PasswordEncoder passwordEncoder) {
@@ -74,7 +75,9 @@ public class SecurityConfig {
         if (!alternateAdminUser.isBlank() && !alternateAdminUser.equals(adminUser)) {
             users.add(User.builder()
                     .username(alternateAdminUser)
-                    .password(passwordEncoder.encode(adminPassword))
+                    .password(passwordEncoder.encode(alternateAdminPassword.isBlank()
+                            ? adminPassword
+                            : alternateAdminPassword))
                     .roles("ADMIN")
                     .build());
         }

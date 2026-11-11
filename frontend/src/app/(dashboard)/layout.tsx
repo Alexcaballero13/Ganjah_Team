@@ -8,5 +8,5 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const session = readSessionToken(cookieStore.get(SESSION_COOKIE)?.value);
   if (!session) redirect("/ingreso");
 
-  return <AppShell username={session.username}>{children}</AppShell>;
+  return <AppShell username={session.username} role={session.role}>{children}</AppShell>;
 }

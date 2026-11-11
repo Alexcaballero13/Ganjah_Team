@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
+import { AuthProvider, type UserRole } from "@/components/auth-context";
 import { Icon, type IconName } from "@/components/icons";
 
 const navigation: Array<{ href: string; label: string; icon: IconName }> = [
@@ -14,7 +15,7 @@ const navigation: Array<{ href: string; label: string; icon: IconName }> = [
   { href: "/estadisticas", label: "Estadísticas", icon: "chart" },
 ];
 
-export function AppShell({ children, username }: { children: React.ReactNode; username: string }) {
+export function AppShell({ children, username, role }: { children: React.ReactNode; username: string; role: UserRole }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -31,6 +32,7 @@ export function AppShell({ children, username }: { children: React.ReactNode; us
   }
 
   return (
+    <AuthProvider username={username} role={role}>
     <div className="app-shell">
       <a className="skip-link" href="#contenido">Saltar al contenido</a>
       <header className="mobile-header">
@@ -67,7 +69,7 @@ export function AppShell({ children, username }: { children: React.ReactNode; us
         </nav>
         <div className="sidebar-session">
           <span className="status-dot" aria-hidden="true" />
-          <div><strong>{username}</strong><span>Sesión activa</span></div>
+          <div><strong>{username}</strong><span>{role === "ADMIN" ? "Administrador" : "Solo consulta"}</span></div>
           <button className="text-button" type="button" onClick={logout} disabled={loggingOut}>
             {loggingOut ? "Saliendo…" : "Salir"}
           </button>
@@ -77,6 +79,7 @@ export function AppShell({ children, username }: { children: React.ReactNode; us
       {open && <button className="sidebar-scrim" aria-label="Cerrar navegación" onClick={() => setOpen(false)} />}
       <main id="contenido" className="app-content">{children}</main>
     </div>
+    </AuthProvider>
   );
 }
 

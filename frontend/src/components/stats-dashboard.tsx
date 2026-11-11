@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api-client";
-import type { JugadorReporte } from "@/lib/types";
+import type { Jugador, JugadorReporte } from "@/lib/types";
 import { Spinner, StatusPanel } from "@/components/ui";
 
 export function StatsDashboard({ initialMonth, initialYear }: { initialMonth: number; initialYear: number }) {
@@ -10,15 +10,17 @@ export function StatsDashboard({ initialMonth, initialYear }: { initialMonth: nu
   const [year, setYear] = useState(initialYear);
   const [report, setReport] = useState<JugadorReporte[]>([]);
   const [absent, setAbsent] = useState<string[]>([]);
+  const [players, setPlayers] = useState<Jugador[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const load = useCallback(async () => {
     try {
-      const [monthly, missing] = await Promise.all([api.reportes.monthly(month, year), api.reportes.absent(month, year)]);
+      const [monthly, missing, playerData] = await Promise.all([api.reportes.monthly(month, year), api.reportes.absent(month, year), api.jugadores.list()]);
       setError("");
       setReport(monthly.sort((a, b) => b.partidosJugados - a.partidosJugados));
       setAbsent(missing);
+      setPlayers(playerData.sort((a, b) => (b.nivelEfectivo ?? -1) - (a.nivelEfectivo ?? -1)));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "No se pudieron cargar los reportes.");
     } finally {
@@ -48,6 +50,25 @@ export function StatsDashboard({ initialMonth, initialYear }: { initialMonth: nu
           <section className="data-panel absent-panel">
             <div className="panel-heading"><div><span className="eyebrow">Disponibilidad</span><h2>Sin participación</h2></div><strong className="large-stat">{absent.length}</strong></div>
             {absent.length ? <ul>{absent.map((name) => <li key={name}>{name}</li>)}</ul> : <StatusPanel tone="success" title="Plantilla activa" message="No hay jugadores ausentes en el periodo consultado." />}
+          </section>
+          <section className="data-panel performance-panel">
+            <div className="panel-heading"><div><span className="eyebrow">Rendimiento real</span><h2>Manual vs. efectivo</h2></div></div>
+            <p className="panel-copy">El nivel efectivo parte del promedio de ataque y defensa y se ajusta únicamente con resultados reales registrados. Es el valor utilizado por el sorteo.</p>
+            {players.length ? <div className="performance-table">
+              <div className="performance-head"><span>Jugador</span><span>Manual</span><span>Efectivo</span><span>Récord</span><span>Victorias</span></div>
+              {players.map((player) => {
+                const played = player.partidosJugados || 0;
+                const wins = player.victorias || 0;
+                const winRate = played ? Math.round((wins / played) * 100) : 0;
+                return <div key={player.id}>
+                  <strong>{player.nombre}</strong>
+                  <span>{player.nivelGeneral?.toFixed(1) ?? "—"}</span>
+                  <b>{player.nivelEfectivo?.toFixed(2) ?? "—"}</b>
+                  <span>{wins}V · {player.empates || 0}E · {player.derrotas || 0}D</span>
+                  <span>{played ? `${winRate}%` : "Sin historial"}</span>
+                </div>;
+              })}
+            </div> : <StatusPanel title="Sin rendimiento calculable" message="Los niveles efectivos aparecerán cuando exista una plantilla con resultados registrados." />}
           </section>
         </div>
       )}

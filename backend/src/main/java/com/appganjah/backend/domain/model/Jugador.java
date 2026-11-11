@@ -7,7 +7,9 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 @Data
 @Builder
@@ -17,7 +19,12 @@ public class Jugador {
     private Long id;
     @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
     private Integer legacySequence;
+    @NotBlank
+    @Size(max = 120)
     private String nombre;
+
+    @NotBlank
+    @Size(max = 40)
     private String posicion;
 
     @NotNull
@@ -49,8 +56,9 @@ public class Jugador {
     @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
     private Integer derrotas;
 
-    // No hay una fórmula de categoría aprobada. El contrato queda preparado,
-    // pero el valor permanece null hasta recibir una regla o clasificación autorizada.
+    // La categoría visual se puede persistir más adelante. Mientras permanezca
+    // null, el frontend aplica la regla central aprobada usando el nivel efectivo
+    // o el promedio real de ataque y defensa (sin inventar estadísticas).
     @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
     private String categoriaVisual;
 

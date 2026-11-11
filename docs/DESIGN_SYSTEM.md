@@ -1,4 +1,4 @@
-# Sistema visual Cancha Eléctrica
+# Identidad visual Ganjah Team
 
 La implementación utiliza la identidad aprobada de Ganjah Team sin reinterpretarla.
 
@@ -19,12 +19,13 @@ La guía completa aprobada permanece en `outputs/GANJAH_TEAM_IDENTIDAD_VISUAL_FA
 
 ## Categorías de jugador
 
-La función central está en `frontend/src/lib/player-tier.ts`. Prioriza el nivel
-efectivo calculado por el backend, luego el nivel general y, si aún no existe
-historial, usa el promedio explícito entre ataque y defensa.
+La función central está en `frontend/src/lib/player-tier.ts`. Usa el promedio
+manual de las estrellas reales de ataque y defensa, igual que el sistema
+original. El nivel efectivo y el historial se muestran como estadísticas
+separadas y no cambian silenciosamente el color de la tarjeta.
 
-- Dorado: nivel mayor o igual a 4.0.
-- Plateado: nivel mayor o igual a 2.5 y menor que 4.0.
+- Dorado: nivel mayor o igual a 3.5.
+- Plateado: nivel mayor o igual a 2.5 y menor que 3.5.
 - Bronce: nivel menor que 2.5.
 
 Los umbrales viven en `PLAYER_TIER_THRESHOLDS` y pueden ajustarse sin cambiar

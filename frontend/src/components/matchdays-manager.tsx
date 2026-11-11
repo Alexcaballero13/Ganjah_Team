@@ -2,8 +2,10 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api-client";
+import { balanceTeams, MAX_DRAFT_PLAYERS, MIN_DRAFT_PLAYERS } from "@/lib/team-balance";
 import { formatDate } from "@/lib/format";
 import type { Equipo, Jugador, JugadorDePartido, MatchDay } from "@/lib/types";
+import { useAuth } from "@/components/auth-context";
 import { Spinner, StatusPanel } from "@/components/ui";
 
 type Assignment = Record<string, Equipo | "">;
@@ -15,9 +17,12 @@ function rosterFrom(assignments: Assignment): JugadorDePartido[] {
 }
 
 export function MatchdaysManager() {
+  const { role } = useAuth();
+  const canWrite = role === "ADMIN";
   const [players, setPlayers] = useState<Jugador[]>([]);
   const [matches, setMatches] = useState<MatchDay[]>([]);
   const [assignments, setAssignments] = useState<Assignment>({});
+  const [draftSelection, setDraftSelection] = useState<Record<string, boolean>>({});
   const [editingRoster, setEditingRoster] = useState<number | null>(null);
   const [scores, setScores] = useState<Record<number, { local: string; visitor: string }>>({});
   const [loading, setLoading] = useState(true);
@@ -48,12 +53,55 @@ export function MatchdaysManager() {
   }, [load]);
 
   const selected = useMemo(() => rosterFrom(assignments), [assignments]);
+  const draftedPlayers = useMemo(
+    () => players.filter((player) => draftSelection[player.nombre]),
+    [draftSelection, players],
+  );
   const localCount = selected.filter((player) => player.equipo === "LOCAL").length;
   const visitorCount = selected.filter((player) => player.equipo === "VISITANTE").length;
-  const setTeam = (name: string, team: Equipo | "") => setAssignments((current) => ({ ...current, [name]: team }));
+  const setTeam = (name: string, team: Equipo | "") => {
+    setAssignments((current) => ({ ...current, [name]: team }));
+    if (team) setDraftSelection((current) => ({ ...current, [name]: true }));
+  };
+
+  const toggleDraft = (player: Jugador, checked: boolean) => {
+    if (checked && draftedPlayers.length >= MAX_DRAFT_PLAYERS) {
+      setError(`La convocatoria admite máximo ${MAX_DRAFT_PLAYERS} jugadores.`);
+      return;
+    }
+    setError("");
+    setDraftSelection((current) => ({ ...current, [player.nombre]: checked }));
+    if (!checked) setAssignments((current) => ({ ...current, [player.nombre]: "" }));
+  };
+
+  const generateBalancedTeams = () => {
+    setError("");
+    try {
+      const balanced = balanceTeams(draftedPlayers);
+      setAssignments(Object.fromEntries([
+        ...balanced.local.map((player) => [player.nombre, "LOCAL"] as const),
+        ...balanced.visitante.map((player) => [player.nombre, "VISITANTE"] as const),
+      ]));
+      setNotice(`Equipos equilibrados: diferencia DEF ${balanced.diferenciaDefensa.toFixed(2)} · ATA ${balanced.diferenciaAtaque.toFixed(2)}.`);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "No fue posible generar los equipos.");
+    }
+  };
 
   const saveRoster = async (event: FormEvent) => {
     event.preventDefault();
+    if (!canWrite) {
+      setError("El perfil de consulta no puede registrar ni modificar MatchDays.");
+      return;
+    }
+    if (selected.length !== draftedPlayers.length) {
+      setError("Genera los equipos o asigna un lado a cada jugador convocado.");
+      return;
+    }
+    if (selected.length < MIN_DRAFT_PLAYERS || selected.length > MAX_DRAFT_PLAYERS) {
+      setError(`La convocatoria debe tener entre ${MIN_DRAFT_PLAYERS} y ${MAX_DRAFT_PLAYERS} jugadores.`);
+      return;
+    }
     if (!localCount || !visitorCount) {
       setError("Asigna al menos un jugador a cada equipo.");
       return;
@@ -70,6 +118,7 @@ export function MatchdaysManager() {
       }
       setEditingRoster(null);
       setAssignments({});
+      setDraftSelection({});
       await load();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "No se pudo guardar la alineación.");
@@ -79,13 +128,16 @@ export function MatchdaysManager() {
   };
 
   const editRoster = (match: MatchDay) => {
+    if (!canWrite) return;
     setEditingRoster(match.id);
     setAssignments(Object.fromEntries(match.jugadores.map((player) => [player.nombre, player.equipo])));
+    setDraftSelection(Object.fromEntries(match.jugadores.map((player) => [player.nombre, true])));
     setNotice("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const saveScore = async (match: MatchDay) => {
+    if (!canWrite) return;
     const score = scores[match.id];
     if (!score || score.local === "" || score.visitor === "") {
       setError("Completa ambos goles antes de guardar.");
@@ -105,6 +157,7 @@ export function MatchdaysManager() {
   };
 
   const remove = async (match: MatchDay) => {
+    if (!canWrite) return;
     if (!window.confirm(`¿Eliminar el MatchDay del ${formatDate(match.fechaPartido)}?`)) return;
     try {
       await api.matchdays.remove(match.id);
@@ -121,8 +174,8 @@ export function MatchdaysManager() {
       {error && <StatusPanel tone="error" title="No pudimos completar la operación" message={error} />}
       <section className="form-panel roster-builder" aria-labelledby="roster-title">
         <div className="panel-heading">
-          <div><span className="eyebrow">{editingRoster ? "Editar encuentro" : "Próximo encuentro"}</span><h2 id="roster-title">{editingRoster ? "Ajustar alineaciones" : "Crear MatchDay"}</h2></div>
-          <div className="team-counter"><span>{localCount} local</span><i>vs</i><span>{visitorCount} visitante</span></div>
+          <div><span className="eyebrow">{editingRoster ? "Editar encuentro" : "Draft 12–18"}</span><h2 id="roster-title">{editingRoster ? "Ajustar alineaciones" : "Generar equipos"}</h2></div>
+          <div className="team-counter"><span>{draftedPlayers.length} convocados</span><span>{localCount} local</span><i>vs</i><span>{visitorCount} visitante</span></div>
         </div>
         {players.length ? (
           <form onSubmit={saveRoster}>
@@ -130,13 +183,17 @@ export function MatchdaysManager() {
               {players.map((player) => (
                 <div className="roster-row" key={player.id}>
                   <div><strong>{player.nombre}</strong><span>{player.posicion}</span></div>
-                  <label><span className="sr-only">Equipo de {player.nombre}</span><select value={assignments[player.nombre] || ""} onChange={(event) => setTeam(player.nombre, event.target.value as Equipo | "")}><option value="">No convocado</option><option value="LOCAL">Local</option><option value="VISITANTE">Visitante</option></select></label>
+                  <div className="roster-controls">
+                    <label className="roster-check"><input type="checkbox" checked={Boolean(draftSelection[player.nombre])} onChange={(event) => toggleDraft(player, event.target.checked)} /><span>Convocar</span></label>
+                    <label><span className="sr-only">Equipo de {player.nombre}</span><select disabled={!draftSelection[player.nombre]} value={assignments[player.nombre] || ""} onChange={(event) => setTeam(player.nombre, event.target.value as Equipo | "")}><option value="">Sin asignar</option><option value="LOCAL">Local</option><option value="VISITANTE">Visitante</option></select></label>
+                  </div>
                 </div>
               ))}
             </div>
             <div className="form-actions">
-              {editingRoster && <button className="button" type="button" onClick={() => { setEditingRoster(null); setAssignments({}); }}>Cancelar edición</button>}
-              <button className="button button-primary" disabled={saving}>{saving ? "Guardando…" : editingRoster ? "Guardar alineación" : "Confirmar MatchDay"}</button>
+              {editingRoster && <button className="button" type="button" onClick={() => { setEditingRoster(null); setAssignments({}); setDraftSelection({}); }}>Cancelar edición</button>}
+              <button className="button" type="button" onClick={generateBalancedTeams} disabled={draftedPlayers.length < MIN_DRAFT_PLAYERS || draftedPlayers.length > MAX_DRAFT_PLAYERS}>Generar equipos equilibrados</button>
+              {canWrite ? <button className="button button-primary" disabled={saving}>{saving ? "Guardando…" : editingRoster ? "Guardar alineación" : "Confirmar MatchDay"}</button> : <span className="viewer-note">Vista previa disponible · registro solo para administradores</span>}
             </div>
           </form>
         ) : loading ? <Spinner label="Cargando plantilla" /> : <StatusPanel title="Primero crea jugadores" message="Un MatchDay necesita jugadores registrados en la plantilla." />}
@@ -152,12 +209,12 @@ export function MatchdaysManager() {
                 <div className="match-teams">
                   <div><b>Local</b><strong>{match.rosterStatus === "DESCONOCIDO" ? "—" : local.length}</strong><span>{match.rosterStatus === "DESCONOCIDO" ? "Plantilla no recuperada" : local.map((player) => player.nombre).join(" · ")}</span></div>
                   <div className="score-editor">
-                    <div><input min="0" inputMode="numeric" aria-label="Goles local" type="number" disabled={match.readOnlySnapshot} value={scores[match.id]?.local ?? ""} onChange={(event) => setScores((current) => ({ ...current, [match.id]: { ...current[match.id], local: event.target.value } }))} /><i>:</i><input min="0" inputMode="numeric" aria-label="Goles visitante" type="number" disabled={match.readOnlySnapshot} value={scores[match.id]?.visitor ?? ""} onChange={(event) => setScores((current) => ({ ...current, [match.id]: { ...current[match.id], visitor: event.target.value } }))} /></div>
-                    {match.readOnlySnapshot ? <span className="eyebrow">Histórico verificado</span> : <button className="text-button" type="button" disabled={saving} onClick={() => saveScore(match)}>Guardar marcador</button>}
+                    <div><input min="0" inputMode="numeric" aria-label="Goles local" type="number" disabled={match.readOnlySnapshot || !canWrite} value={scores[match.id]?.local ?? ""} onChange={(event) => setScores((current) => ({ ...current, [match.id]: { ...current[match.id], local: event.target.value } }))} /><i>:</i><input min="0" inputMode="numeric" aria-label="Goles visitante" type="number" disabled={match.readOnlySnapshot || !canWrite} value={scores[match.id]?.visitor ?? ""} onChange={(event) => setScores((current) => ({ ...current, [match.id]: { ...current[match.id], visitor: event.target.value } }))} /></div>
+                    {match.readOnlySnapshot ? <span className="eyebrow">Histórico verificado</span> : canWrite ? <button className="text-button" type="button" disabled={saving} onClick={() => saveScore(match)}>Guardar marcador</button> : <span className="viewer-note">Solo lectura</span>}
                   </div>
                   <div><b>Visitante</b><strong>{match.rosterStatus === "DESCONOCIDO" ? "—" : visitor.length}</strong><span>{match.rosterStatus === "DESCONOCIDO" ? "Plantilla no recuperada" : visitor.map((player) => player.nombre).join(" · ")}</span></div>
                 </div>
-                {!match.readOnlySnapshot && <div className="card-actions"><button className="button button-small" type="button" onClick={() => editRoster(match)}>Editar equipos</button><button className="button button-small button-danger-ghost" type="button" onClick={() => remove(match)}>Eliminar</button></div>}
+                {!match.readOnlySnapshot && canWrite && <div className="card-actions"><button className="button button-small" type="button" onClick={() => editRoster(match)}>Editar equipos</button><button className="button button-small button-danger-ghost" type="button" onClick={() => remove(match)}>Eliminar</button></div>}
               </article>
             );
           })}

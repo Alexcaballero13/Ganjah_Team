@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const validation = await fetch(`${backendUrl()}/api/jugadores`, {
+    const validation = await fetch(`${backendUrl()}/api/auth/me`, {
       headers: {
         Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`,
         Accept: "application/json",
@@ -50,10 +50,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "No fue posible validar el acceso." }, { status: 502 });
     }
 
-    const response = NextResponse.json({ username });
+    const identity = (await validation.json()) as { username?: unknown; role?: unknown };
+    const role = identity.role === "ADMIN" || identity.role === "VIEWER" ? identity.role : null;
+    if (!role) {
+      return NextResponse.json({ message: "El servidor devolvió un perfil inválido." }, { status: 502 });
+    }
+
+    const response = NextResponse.json({ username, role });
     response.cookies.set(
       SESSION_COOKIE,
-      createSessionToken(username, password),
+      createSessionToken(username, password, role),
       sessionCookieOptions(),
     );
     return response;
@@ -70,7 +76,7 @@ export async function GET(request: NextRequest) {
   if (!session) {
     return NextResponse.json({ authenticated: false }, { status: 401 });
   }
-  return NextResponse.json({ authenticated: true, username: session.username });
+  return NextResponse.json({ authenticated: true, username: session.username, role: session.role });
 }
 
 export async function DELETE(request: NextRequest) {

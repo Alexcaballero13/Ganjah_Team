@@ -13,6 +13,7 @@ export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8;
 export interface AuthSession {
   username: string;
   password: string;
+  role: "ADMIN" | "VIEWER";
   expiresAt: number;
 }
 
@@ -24,12 +25,13 @@ function sessionKey() {
   return createHash("sha256").update(secret).digest();
 }
 
-export function createSessionToken(username: string, password: string) {
+export function createSessionToken(username: string, password: string, role: AuthSession["role"]) {
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", sessionKey(), iv);
   const payload: AuthSession = {
     username,
     password,
+    role,
     expiresAt: Date.now() + SESSION_MAX_AGE_SECONDS * 1000,
   };
   const encrypted = Buffer.concat([
@@ -65,6 +67,7 @@ export function readSessionToken(token?: string): AuthSession | null {
     if (
       typeof session.username !== "string" ||
       typeof session.password !== "string" ||
+      (session.role !== "ADMIN" && session.role !== "VIEWER") ||
       typeof session.expiresAt !== "number" ||
       !session.username ||
       !session.password ||

@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api-client";
+import { useAuth } from "@/components/auth-context";
 import type { Jugador, JugadorInput } from "@/lib/types";
 import { Icon } from "@/components/icons";
 import { PlayerCard } from "@/components/player-card";
@@ -15,6 +16,8 @@ const emptyForm: JugadorInput = {
 };
 
 export function PlayersManager() {
+  const { role } = useAuth();
+  const canWrite = role === "ADMIN";
   const [players, setPlayers] = useState<Jugador[]>([]);
   const [form, setForm] = useState<JugadorInput>(emptyForm);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -42,6 +45,7 @@ export function PlayersManager() {
   }, [load]);
 
   const openCreate = () => {
+    if (!canWrite) return;
     setEditingId(null);
     setForm(emptyForm);
     setFormOpen(true);
@@ -49,6 +53,7 @@ export function PlayersManager() {
   };
 
   const openEdit = (player: Jugador) => {
+    if (!canWrite) return;
     setEditingId(player.id);
     setForm({
       nombre: player.nombre,
@@ -62,6 +67,10 @@ export function PlayersManager() {
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
+    if (!canWrite) {
+      setError("El perfil de consulta no puede modificar jugadores.");
+      return;
+    }
     if (!form.nombre.trim() || !form.posicion.trim()) {
       setError("Nombre y posición son obligatorios.");
       return;
@@ -87,6 +96,7 @@ export function PlayersManager() {
   };
 
   const remove = async (player: Jugador) => {
+    if (!canWrite) return;
     if (!window.confirm(`¿Eliminar a ${player.nombre}? El historial de MatchDays conservará su nombre.`)) return;
     setError("");
     try {
@@ -102,7 +112,7 @@ export function PlayersManager() {
     <div className="manager-stack">
       <div className="toolbar">
         <div><strong>{players.length}</strong><span> jugadores en la plantilla</span></div>
-        <button className="button button-primary" type="button" onClick={openCreate}><Icon name="plus" />Nuevo jugador</button>
+        {canWrite ? <button className="button button-primary" type="button" onClick={openCreate}><Icon name="plus" />Nuevo jugador</button> : <span className="viewer-note">Perfil de consulta · solo lectura</span>}
       </div>
       {notice && <StatusPanel tone="success" title="Listo" message={notice} />}
       {error && <StatusPanel tone="error" title="No pudimos completar la operación" message={error} />}
@@ -122,9 +132,9 @@ export function PlayersManager() {
 
       {loading ? <div className="content-loading"><Spinner label="Cargando jugadores" /></div> : players.length ? (
         <section className="players-grid" aria-label="Jugadores registrados">
-          {players.map((player) => <PlayerCard key={player.id} player={player} actions={<><button className="button button-small" type="button" onClick={() => openEdit(player)}>Editar</button><button className="button button-small button-danger-ghost" type="button" onClick={() => remove(player)}>Eliminar</button></>} />)}
+          {players.map((player) => <PlayerCard key={player.id} player={player} actions={canWrite ? <><button className="button button-small" type="button" onClick={() => openEdit(player)}>Editar</button><button className="button button-small button-danger-ghost" type="button" onClick={() => remove(player)}>Eliminar</button></> : undefined} />)}
         </section>
-      ) : <StatusPanel title="La plantilla está vacía" message="Crea el primer jugador para preparar un MatchDay." action={<button className="button button-primary" onClick={openCreate}>Crear jugador</button>} />}
+      ) : <StatusPanel title="La plantilla está vacía" message={canWrite ? "Crea el primer jugador para preparar un MatchDay." : "No hay jugadores disponibles para consultar."} action={canWrite ? <button className="button button-primary" onClick={openCreate}>Crear jugador</button> : undefined} />}
     </div>
   );
 }

@@ -56,17 +56,6 @@ public class MatchDayController {
     @PutMapping("/{id}/jugadores")
     @Operation(summary = "Editar el roster (equipo LOCAL/VISITANTE) de un MatchDay ya confirmado")
     public ResponseEntity<MatchDay> actualizarJugadores(@PathVariable Long id, @Valid @RequestBody JugadoresRequest body) {
-        // Un mismo nombre no puede estar dos veces (ni en el mismo equipo ni en
-        // equipos distintos): contaría partidos y aplicaría ajustes de rating
-        // opuestos sobre la misma persona.
-        long nombresDistintos = body.getJugadores().stream()
-                .map(JugadorDePartido::getNombre)
-                .distinct()
-                .count();
-        if (nombresDistintos != body.getJugadores().size()) {
-            return ResponseEntity.badRequest().build();
-        }
-
         return matchDayService.actualizarJugadores(id, body.getJugadores())
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

@@ -29,6 +29,17 @@ participaciones con jugadores está basada en texto, no en `jugador_id`.
 - No se inventan dorsales, fotos, goles, resultados, posiciones tácticas ni equipos históricos.
 - Los cuatro MatchDays 49, 50, 51 y 52 son snapshots locales de solo lectura porque sí tienen lado LOCAL/VISITANTE verificable.
 
+## Consolidación Fase 7
+
+- Los 30 registros del respaldo visual coinciden exactamente con la semilla local en nombre, posición, ataque, defensa y promedio manual.
+- No hay IDs ni nombres de jugadores duplicados en el conjunto local.
+- Distribución derivada sin persistir datos nuevos: 8 dorados, 12 plateados y 10 bronce.
+- La categoría usa sólo el promedio autorizado de ataque y defensa. El nivel efectivo conserva su función estadística, pero no altera el color de la tarjeta por decimales internos no visibles.
+- PostgreSQL 18 local validó dos importaciones consecutivas con el mismo resultado: 30 jugadores, 32 MatchDays, 62 participaciones verificables, 59 relaciones exactas, 3 etiquetas pendientes y 1 marcador completo.
+- Los 505 vínculos vistos en Supabase siguen siendo la fuente remota completa; los 443 que no tienen respaldo local íntegro no se recrean ni se inventan.
+
+Los scripts reproducibles y las consultas de prevalidación están en `database/`.
+
 ## Riesgo remoto que debe resolverse antes de integrar
 
 Las tres tablas del esquema `public` tienen RLS desactivado, ninguna política y el propio panel indica acceso desde Data API para cualquiera. Tampoco hay usuarios visibles en Authentication. Antes de conectar el frontend a Supabase se debe diseñar autenticación, habilitar RLS y crear políticas de mínimo privilegio; nunca se debe exponer una clave `service_role` en el navegador.

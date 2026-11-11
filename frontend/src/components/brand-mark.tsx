@@ -11,6 +11,7 @@ export function BrandMark({ compact = false }: { compact?: boolean }) {
         width={944}
         height={1100}
         priority
+        unoptimized
         aria-hidden="true"
       />
       {!compact && <span className="brand-name">Ganjah Team</span>}
