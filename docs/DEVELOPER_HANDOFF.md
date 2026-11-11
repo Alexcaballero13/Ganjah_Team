@@ -5,6 +5,7 @@
 - Repositorio: `https://github.com/Alexcaballero13/Ganjah_Team`
 - Rama de trabajo: `codex/fase-3-fullstack`
 - SHA del código validado (Fases 9–15): `8bcdd0b`.
+- SHA consolidado con bloqueo de despliegues automáticos: `991474d`.
 - `main` no debe modificarse ni fusionarse sin autorización expresa.
 
 ## Estructura y ejecución
