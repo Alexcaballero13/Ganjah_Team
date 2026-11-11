@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from "react";
 import { api } from "@/lib/api-client";
 import { useAuth } from "@/components/auth-context";
 import type { Jugador, JugadorInput } from "@/lib/types";
@@ -15,6 +15,26 @@ const emptyForm: JugadorInput = {
   nivelAtaque: 3,
   nivelDefensa: 3,
 };
+
+const PlayerListCard = memo(function PlayerListCard({
+  player,
+  canWrite,
+  editing,
+  onEdit,
+  onRemove,
+}: {
+  player: Jugador;
+  canWrite: boolean;
+  editing: boolean;
+  onEdit: (player: Jugador, event: MouseEvent<HTMLButtonElement>) => void;
+  onRemove: (player: Jugador) => void;
+}) {
+  return (
+    <div className={editing ? "player-card-slot player-card-slot-editing" : "player-card-slot"}>
+      <PlayerCard player={player} actions={canWrite ? <><button className="button button-small" type="button" onClick={(event) => onEdit(player, event)}>Editar</button><button className="button button-small button-danger-ghost" type="button" onClick={() => onRemove(player)}>Eliminar</button></> : undefined} />
+    </div>
+  );
+});
 
 export function PlayersManager() {
   const { role } = useAuth();
@@ -107,7 +127,7 @@ export function PlayersManager() {
     setError("");
   };
 
-  const openEdit = (player: Jugador, event: MouseEvent<HTMLButtonElement>) => {
+  const openEdit = useCallback((player: Jugador, event: MouseEvent<HTMLButtonElement>) => {
     if (!canWrite) return;
     editTriggerRef.current = event.currentTarget;
     setEditingId(player.id);
@@ -120,7 +140,7 @@ export function PlayersManager() {
     setFormOpen(true);
     setNotice("");
     setError("");
-  };
+  }, [canWrite]);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -140,16 +160,17 @@ export function PlayersManager() {
     setError("");
     try {
       if (editingId !== null) {
-        await api.jugadores.update(editingId, form);
+        const updated = await api.jugadores.update(editingId, form);
+        setPlayers((current) => current.map((player) => player.id === updated.id ? updated : player));
         setNotice("Jugador actualizado.");
       } else {
-        await api.jugadores.create(form);
+        const created = await api.jugadores.create(form);
+        setPlayers((current) => [...current, created]);
         setNotice("Jugador creado.");
       }
       setFormOpen(false);
       setForm(emptyForm);
       setEditingId(null);
-      await load();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "No se pudo guardar el jugador.");
     } finally {
@@ -157,18 +178,18 @@ export function PlayersManager() {
     }
   };
 
-  const remove = async (player: Jugador) => {
+  const remove = useCallback(async (player: Jugador) => {
     if (!canWrite) return;
     if (!window.confirm(`¿Eliminar a ${player.nombre}? El historial de MatchDays conservará su nombre.`)) return;
     setError("");
     try {
       await api.jugadores.remove(player.id);
+      setPlayers((current) => current.filter((item) => item.id !== player.id));
       setNotice("Jugador eliminado.");
-      await load();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "No se pudo eliminar el jugador.");
     }
-  };
+  }, [canWrite]);
 
   return (
     <div className="manager-stack">
@@ -206,7 +227,7 @@ export function PlayersManager() {
 
       {loading ? <div className="content-loading"><Spinner label="Cargando jugadores" /></div> : players.length ? (
         filteredPlayers.length ? <section className="players-grid" aria-label="Jugadores registrados">
-          {filteredPlayers.map((player) => <div className={editingId === player.id ? "player-card-slot player-card-slot-editing" : "player-card-slot"} key={player.id}><PlayerCard player={player} actions={canWrite ? <><button className="button button-small" type="button" onClick={(event) => openEdit(player, event)}>Editar</button><button className="button button-small button-danger-ghost" type="button" onClick={() => remove(player)}>Eliminar</button></> : undefined} /></div>)}
+          {filteredPlayers.map((player) => <PlayerListCard key={player.id} player={player} canWrite={canWrite} editing={editingId === player.id} onEdit={openEdit} onRemove={remove} />)}
         </section> : <StatusPanel title="Sin coincidencias" message="No hay jugadores que cumplan ambos filtros." action={<button className="button" type="button" onClick={() => { setPerformanceFilter("all"); setPositionFilter("all"); }}>Limpiar filtros</button>} />
       ) : <StatusPanel title="La plantilla está vacía" message={canWrite ? "Crea el primer jugador para preparar un MatchDay." : "No hay jugadores disponibles para consultar."} action={canWrite ? <button className="button button-primary" onClick={openCreate}>Crear jugador</button> : undefined} />}
     </div>

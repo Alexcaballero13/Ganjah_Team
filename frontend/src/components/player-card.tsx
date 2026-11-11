@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { memo } from "react";
 import { displayLevel } from "@/lib/format";
 import { getPlayerRating, getPlayerTier, playerTierLabels } from "@/lib/player-tier";
 import { normalizePlayerPosition } from "@/lib/player-position";
@@ -64,7 +65,7 @@ function PlayerAvatar({ player }: { player: Jugador }) {
           alt=""
           width={silhouette.width}
           height={silhouette.height}
-          unoptimized
+          sizes="(max-width: 430px) 88px, 120px"
           aria-hidden="true"
         />
       ) : <PlayerSilhouette />}
@@ -72,7 +73,7 @@ function PlayerAvatar({ player }: { player: Jugador }) {
   );
 }
 
-export function PlayerCard({ player, team, compact = false, classificationAvailable = true, actions }: {
+export const PlayerCard = memo(function PlayerCard({ player, team, compact = false, classificationAvailable = true, actions }: {
   player: Jugador;
   team?: Equipo;
   compact?: boolean;
@@ -106,4 +107,4 @@ export function PlayerCard({ player, team, compact = false, classificationAvaila
       )}
     </article>
   );
-}
+});

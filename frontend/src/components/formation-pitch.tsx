@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { PlayerCard } from "@/components/player-card";
 import { calculateFormation } from "@/lib/formation-layout";
 import { normalizePlayerPosition } from "@/lib/player-position";
@@ -14,7 +15,7 @@ function TeamWarnings({ players, team }: { players: Jugador[]; team: Equipo }) {
   );
 }
 
-export function FormationPitch({ local, visitante }: { local: Jugador[]; visitante: Jugador[] }) {
+export const FormationPitch = memo(function FormationPitch({ local, visitante }: { local: Jugador[]; visitante: Jugador[] }) {
   const teams = [
     { id: "VISITANTE" as const, players: visitante },
     { id: "LOCAL" as const, players: local },
@@ -47,4 +48,4 @@ export function FormationPitch({ local, visitante }: { local: Jugador[]; visitan
       <p className="field-note">La cancha calcula posiciones actuales sin modificar el equipo asignado ni guardar coordenadas. Desliza horizontalmente en pantallas pequeñas.</p>
     </section>
   );
-}
+});

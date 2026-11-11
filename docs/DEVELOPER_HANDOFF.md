@@ -44,6 +44,13 @@ npm run build
 - Lista compartible: antes de confirmar y desde cada MatchDay confirmado con alineación recuperada, el navegador genera un PNG vertical con LOCAL/VISITANTE, nombres y posiciones, sin mostrar niveles deportivos. Se puede descargar o compartir desde el dispositivo y no se persiste en backend ni PostgreSQL.
 - Históricos: la nueva vista previa vive en el constructor actual; los 32 MatchDays recuperados no se reescriben.
 
+## Optimización de Fase 16
+
+- Las siluetas conservan sus archivos y apariencia, pero ahora se entregan mediante el optimizador de imágenes de Next.js: reducción local medida de 1.510.499 B a 11.556 B al tamaño de tarjeta.
+- Tarjetas, cuadrícula y cancha evitan renderizados no relacionados; la cancha se descarga sólo cuando se genera una formación.
+- Crear, editar o eliminar espera la respuesta persistida y actualiza sólo el jugador afectado, eliminando la consulta completa posterior.
+- Métricas, condiciones, PostgreSQL y pendientes de Preview: `docs/PERFORMANCE_PHASE_16.md`.
+
 ## Base de datos
 
 **SIN MIGRACIÓN SQL NECESARIA para Fase 15.** Se reutilizan nombre, posición, ataque, defensa y asignación LOCAL/VISITANTE.

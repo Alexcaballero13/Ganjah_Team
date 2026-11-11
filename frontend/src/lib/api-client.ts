@@ -18,6 +18,10 @@ export class ApiError extends Error {
   }
 }
 
+function hydratePlayer(player: Jugador): Jugador {
+  return process.env.NODE_ENV === "development" ? hydrateLegacyPlayerSnapshot(player) : player;
+}
+
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`/api/backend${path}`, {
     ...init,
@@ -53,20 +57,18 @@ export const api = {
   jugadores: {
     list: async () => {
       const players = await apiRequest<Jugador[]>("/api/jugadores");
-      return process.env.NODE_ENV === "development"
-        ? players.map(hydrateLegacyPlayerSnapshot)
-        : players;
+      return players.map(hydratePlayer);
     },
-    create: (input: JugadorInput) =>
-      apiRequest<Jugador>("/api/jugadores", {
+    create: async (input: JugadorInput) =>
+      hydratePlayer(await apiRequest<Jugador>("/api/jugadores", {
         method: "POST",
         body: JSON.stringify(input),
-      }),
-    update: (id: number, input: JugadorInput) =>
-      apiRequest<Jugador>(`/api/jugadores/${id}`, {
+      })),
+    update: async (id: number, input: JugadorInput) =>
+      hydratePlayer(await apiRequest<Jugador>(`/api/jugadores/${id}`, {
         method: "PUT",
         body: JSON.stringify(input),
-      }),
+      })),
     remove: (id: number) =>
       apiRequest<void>(`/api/jugadores/${id}`, { method: "DELETE" }),
   },

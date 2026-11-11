@@ -1,13 +1,13 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { api } from "@/lib/api-client";
 import { balanceTeams, MAX_DRAFT_PLAYERS, MIN_DRAFT_PLAYERS } from "@/lib/team-balance";
 import { formatDate } from "@/lib/format";
 import type { Equipo, Jugador, JugadorDePartido, MatchDay } from "@/lib/types";
 import { useAuth } from "@/components/auth-context";
 import { Spinner, StatusPanel } from "@/components/ui";
-import { FormationPitch } from "@/components/formation-pitch";
 import { TeamListImage } from "@/components/team-list-image";
 import { normalizePlayerPosition, playerPositionLabels, type PlayerPosition } from "@/lib/player-position";
 
@@ -20,6 +20,11 @@ const rosterPositionOptions: Array<{ value: RosterPositionFilter; label: string 
   { value: "MEDIOCAMPISTA", label: playerPositionLabels.MEDIOCAMPISTA },
   { value: "DELANTERO", label: playerPositionLabels.DELANTERO },
 ];
+
+const FormationPitch = dynamic(
+  () => import("@/components/formation-pitch").then((module) => module.FormationPitch),
+  { loading: () => <div className="content-loading"><Spinner label="Preparando cancha" /></div> },
+);
 
 type Assignment = Record<string, Equipo | "">;
 
