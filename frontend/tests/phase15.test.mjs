@@ -8,6 +8,7 @@ const formation = await readFile(new URL("../src/lib/formation-layout.ts", impor
 const matchdays = await readFile(new URL("../src/components/matchdays-manager.tsx", import.meta.url), "utf8");
 const balance = await readFile(new URL("../src/lib/team-balance.ts", import.meta.url), "utf8");
 const positions = await readFile(new URL("../src/lib/player-position.ts", import.meta.url), "utf8");
+const styles = await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8");
 
 test("los filtros combinan rendimiento y posición sin reordenar ni mutar", () => {
   assert.match(filters, /players\.filter/);
@@ -25,6 +26,25 @@ test("el normalizador compartido conserva los aliases de las cuatro posiciones",
   assert.match(positions, /VOLANTE: "MEDIOCAMPISTA"/);
   assert.match(positions, /EXTREMO: "DELANTERO"/);
   assert.match(positions, /normalizePlayerPosition/);
+});
+
+test("crear y editar jugadores obliga a elegir una de las cuatro posiciones", () => {
+  assert.match(manager, /const PLAYER_POSITIONS: PlayerPosition\[\] = \["PORTERO", "DEFENSA", "MEDIOCAMPISTA", "DELANTERO"\]/);
+  assert.match(manager, /<select value=\{form\.posicion\}/);
+  assert.match(manager, /\}\)\} required><option value="" disabled>/);
+  assert.match(manager, /Selecciona una posición/);
+  assert.match(manager, /editablePosition\(player\.posicion\)/);
+  assert.doesNotMatch(manager, /input list="player-positions"/);
+});
+
+test("las siluetas crecen dentro del recorte de la tarjeta", () => {
+  assert.match(styles, /\.game-card \{[^}]*overflow: hidden/s);
+  assert.match(styles, /\.game-card-avatar \{[^}]*width: min\(100%, 88px\)/s);
+  assert.match(styles, /\.game-card-avatar-position \{ overflow: hidden;/);
+  assert.match(styles, /\.position-silhouette \{ width: 96%; height: 96%; object-fit: contain; object-position: center;/);
+  assert.match(styles, /\.position-goalkeeper, \.position-defender \{ width: 100%; height: 100%; \}/);
+  assert.match(styles, /\.game-card-compact \.game-card-avatar \{ width: 64px;/);
+  assert.match(styles, /\.team-formation-player \.game-card-compact \.game-card-avatar \{ width: 52px;/);
 });
 
 test("la edición contextual mantiene autorización, foco y confirmación de API", () => {
