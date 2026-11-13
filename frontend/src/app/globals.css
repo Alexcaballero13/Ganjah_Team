@@ -185,6 +185,13 @@ input:hover, select:hover { border-color: rgba(244,248,245,.35); }.form-actions 
 .game-card-star-rating strong { display: flex; justify-content: center; gap: .04rem; font-size: .58rem; line-height: 1; }
 .game-card-star-rating i { font-style: normal; }
 .game-card-star-rating .star-filled { color: #10251b; text-shadow: 0 1px 0 rgba(255,255,255,.22); }
+.game-card-full .game-card-topline { font-size: .78rem; font-weight: 800; }
+.game-card-full .game-card-rating strong { font-size: 2.15rem; }
+.game-card-full .game-card-rating span { max-width: 64px; font-size: .58rem; font-weight: 800; }
+.game-card-full h2 { font-size: 1.18rem; }
+.game-card-full .game-card-stats span { font-size: .56rem; font-weight: 800; }
+.game-card-full .game-card-stats strong { font-size: .88rem; }
+.game-card-full .game-card-star-rating strong { gap: .06rem; font-size: .78rem; }
 .game-card-star-rating .star-empty { color: rgba(6,17,13,.25); }
 .game-card-actions { display: flex; justify-content: center; gap: .25rem; padding-top: .3rem; border-top: 1px solid rgba(6,17,13,.22); }.game-card-actions .button { min-height: 1.6rem; padding: .2rem .38rem; color: var(--chalk-50); border-color: rgba(6,17,13,.45); background: rgba(6,17,13,.76); font-size: .56rem; }.game-card-actions .button:hover { background: var(--pitch-950); }
 .card-actions { display: flex; justify-content: end; gap: .5rem; }

@@ -47,6 +47,13 @@ test("las siluetas crecen dentro del recorte de la tarjeta", () => {
   assert.match(styles, /\.team-formation-player \.game-card-compact \.game-card-avatar \{ width: 52px;/);
 });
 
+test("las tarjetas completas muestran nombres, valores y estrellas legibles", () => {
+  assert.match(styles, /\.game-card-full \.game-card-rating strong \{ font-size: 2\.15rem; \}/);
+  assert.match(styles, /\.game-card-full h2 \{ font-size: 1\.18rem; \}/);
+  assert.match(styles, /\.game-card-full \.game-card-stats span \{ font-size: \.56rem; font-weight: 800; \}/);
+  assert.match(styles, /\.game-card-full \.game-card-star-rating strong \{ gap: \.06rem; font-size: \.78rem; \}/);
+});
+
 test("la edición contextual mantiene autorización, foco y confirmación de API", () => {
   assert.match(manager, /role="dialog"/);
   assert.match(manager, /aria-modal="true"/);
