@@ -51,6 +51,13 @@ npm run build
 - Crear, editar o eliminar espera la respuesta persistida y actualiza sólo el jugador afectado, eliminando la consulta completa posterior.
 - Métricas, condiciones, PostgreSQL y pendientes de Preview: `docs/PERFORMANCE_PHASE_16.md`.
 
+## Identidad visual de tarjetas — Fase 17
+
+- Todas las variantes del componente compartido `PlayerCard`, incluidas las tarjetas completas y compactas de LOCAL/VISITANTE y cancha, incorporan el recurso oficial `frontend/public/ganjah-team-logo-extracted.png` como marca de agua grande, centrada y proporcional.
+- La capa decorativa ocupa el 94 % del área interna y el 98 % en tarjetas compactas, no recibe eventos ni se expone a lectores de pantalla. Dorado, plateado y bronce ajustan sólo la opacidad para conservar la lectura de nombre, posición, valoración, ATA/DEF, estrellas y controles.
+- La edición continúa actualizando únicamente el jugador confirmado por la API; los cambios de ataque/defensa reutilizan la clasificación central y los cambios de posición reutilizan las cuatro siluetas originales.
+- **SIN MIGRACIÓN SQL NECESARIA.** Esta fase no modifica Supabase, PostgreSQL, jugadores, MatchDays, participaciones, autenticación ni permisos.
+
 ## Base de datos
 
 **SIN MIGRACIÓN SQL NECESARIA para Fase 15.** Se reutilizan nombre, posición, ataque, defensa y asignación LOCAL/VISITANTE.
