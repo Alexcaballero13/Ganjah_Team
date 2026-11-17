@@ -18,6 +18,7 @@ test("muestra la posición abreviada entre calificación y silueta en todas las 
   assert.match(playerCard, /<div className="game-card-rating">/);
   assert.match(playerCard, /className="game-card-position"/);
   assert.match(playerCard, /<PlayerAvatar player=\{player\} \/>/);
-  assert.match(styles, /grid-template-columns: \.55fr auto 1\.2fr/);
+  assert.match(styles, /left: 50%; top: 50%/);
+  assert.match(styles, /transform: translate\(-50%,-50%\)/);
   assert.match(styles, /\.game-card-compact \.game-card-position/);
 });
