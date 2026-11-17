@@ -33,6 +33,13 @@ export const playerPositionLabels: Record<PlayerPosition, string> = {
   DELANTERO: "Delantero",
 };
 
+export const playerPositionAbbreviations: Record<PlayerPosition, string> = {
+  PORTERO: "GK",
+  DEFENSA: "DF",
+  MEDIOCAMPISTA: "MD",
+  DELANTERO: "DL",
+};
+
 export function normalizePositionValue(position?: string): string {
   return position
     ?.trim()
@@ -44,6 +51,11 @@ export function normalizePositionValue(position?: string): string {
 
 export function normalizePlayerPosition(position?: string): PlayerPosition | null {
   return POSITION_ALIASES[normalizePositionValue(position)] ?? null;
+}
+
+export function getPlayerPositionAbbreviation(position?: string): string {
+  const normalized = normalizePlayerPosition(position);
+  return normalized ? playerPositionAbbreviations[normalized] : "—";
 }
 
 export function playerPositionKey(position?: string): string {

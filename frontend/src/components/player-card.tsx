@@ -2,7 +2,7 @@ import Image from "next/image";
 import { memo } from "react";
 import { displayLevel } from "@/lib/format";
 import { getPlayerRating, getPlayerTier, playerTierLabels } from "@/lib/player-tier";
-import { normalizePlayerPosition } from "@/lib/player-position";
+import { getPlayerPositionAbbreviation, normalizePlayerPosition } from "@/lib/player-position";
 import type { Equipo, Jugador } from "@/lib/types";
 
 function StarRating({ label, value }: { label: string; value: number }) {
@@ -83,6 +83,7 @@ export const PlayerCard = memo(function PlayerCard({ player, team, compact = fal
   const tier = classificationAvailable ? getPlayerTier(player) : "unrated";
   const rating = getPlayerRating(player);
   const tierLabel = playerTierLabels[tier];
+  const positionAbbreviation = getPlayerPositionAbbreviation(player.posicion);
 
   return (
     <article className={`game-card tier-${tier} ${compact ? "game-card-compact" : "game-card-full"}`} aria-label={`${player.nombre}, categoría ${tierLabel}`}>
@@ -92,7 +93,8 @@ export const PlayerCard = memo(function PlayerCard({ player, team, compact = fal
         {team && <b>{team === "LOCAL" ? "LOC" : "VIS"}</b>}
       </div>
       <div className="game-card-identity">
-        <div className="game-card-rating"><strong>{classificationAvailable ? displayLevel(rating) : "—"}</strong><span>{player.posicion || "—"}</span></div>
+        <div className="game-card-rating"><strong>{classificationAvailable ? displayLevel(rating) : "—"}</strong></div>
+        <span className="game-card-position" aria-label={`Posición: ${player.posicion || "sin posición"}`}>{positionAbbreviation}</span>
         <PlayerAvatar player={player} />
       </div>
       <h2 title={player.nombre}>{player.nombre}</h2>
